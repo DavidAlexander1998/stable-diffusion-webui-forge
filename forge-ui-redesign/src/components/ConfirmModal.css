@@ -1,0 +1,128 @@
+.confirm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.confirm-modal {
+  background: linear-gradient(135deg, rgba(30, 30, 40, 0.98), rgba(20, 20, 30, 0.98));
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  max-width: 480px;
+  width: 90%;
+  padding: 0;
+  overflow: hidden;
+}
+
+.confirm-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.confirm-icon {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.confirm-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.confirm-modal-body {
+  padding: 24px;
+}
+
+.confirm-modal-body p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.confirm-modal-actions {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px 24px;
+  justify-content: flex-end;
+}
+
+.confirm-cancel-btn,
+.confirm-ok-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirm-cancel-btn {
+  background: rgba(100, 100, 120, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(100, 100, 120, 0.3);
+}
+
+.confirm-cancel-btn:hover {
+  background: rgba(100, 100, 120, 0.3);
+  color: #fff;
+}
+
+.confirm-ok-btn {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  color: #fff;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.confirm-ok-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+}
+
+.confirm-ok-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+  .confirm-modal {
+    width: 95%;
+    max-width: none;
+  }
+
+  .confirm-modal-header {
+    padding: 20px 20px 12px;
+  }
+
+  .confirm-modal-body {
+    padding: 20px;
+  }
+
+  .confirm-modal-actions {
+    padding: 12px 20px 20px;
+    flex-direction: column-reverse;
+  }
+
+  .confirm-cancel-btn,
+  .confirm-ok-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

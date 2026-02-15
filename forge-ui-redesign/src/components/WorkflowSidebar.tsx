@@ -7,6 +7,7 @@ interface WorkflowSidebarProps {
   currentMode: WorkflowMode;
   onModeChange: (mode: WorkflowMode) => void;
   history: any[];
+  onOpenGallery?: () => void;
 }
 
 const WORKFLOW_MODES = [
@@ -17,7 +18,7 @@ const WORKFLOW_MODES = [
   { id: 'batch' as WorkflowMode, label: 'Batch Process', icon: Grid3x3, color: '#f59e0b' },
 ];
 
-export default function WorkflowSidebar({ currentMode, onModeChange, history }: WorkflowSidebarProps) {
+export default function WorkflowSidebar({ currentMode, onModeChange, history, onOpenGallery }: WorkflowSidebarProps) {
   return (
     <div className="workflow-sidebar card">
       {/* Workflow Modes */}
@@ -69,8 +70,12 @@ export default function WorkflowSidebar({ currentMode, onModeChange, history }: 
             <Clock size={16} />
             Recent
           </h3>
-          <button className="section-action">
-            <Star size={14} />
+          <button 
+            className="section-action" 
+            onClick={() => onOpenGallery?.()} 
+            title="View All"
+          >
+            View All
           </button>
         </div>
 

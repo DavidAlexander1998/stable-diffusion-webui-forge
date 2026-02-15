@@ -1,36 +1,62 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, Share2, Repeat, Maximize2, Loader2, Check } from 'lucide-react';
-import { downloadImage, copyImageToClipboard, copyParamsAsText } from '../utils/imageUtils';
+import {
+  downloadImage,
+  downloadAllImages,
+  copyImageToClipboard,
+  copyParamsAsText,
+  exportParamsAsJSON,
+} from '../utils/imageUtils';
+import InpaintCanvas from './InpaintCanvas';
 import FullscreenModal from './FullscreenModal';
 import './MainCanvas.css';
+import type { WorkflowMode } from '../types';
 
 interface MainCanvasProps {
   isGenerating: boolean;
   queue: any[];
   history: any[];
+  workflowMode: WorkflowMode;
+  uploadedImage?: string | null;
+  inpaintMask?: string | null;
+  onMaskChange?: (maskDataUrl: string | null) => void;
   onGenerate: () => void;
   onVariation?: (params: any) => void;
+  previewImage?: string | null;
+  showLivePreview?: boolean;
+  currentStep?: number;
+  totalSteps?: number;
 }
 
 export default function MainCanvas({
   isGenerating,
   queue,
   history,
+  workflowMode,
+  uploadedImage,
+  inpaintMask,
+  onMaskChange,
   onGenerate,
   onVariation,
+  previewImage,
+  showLivePreview = true,
+  currentStep = 0,
+  totalSteps = 0,
 }: MainCanvasProps) {
   const latestImage = history[0];
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
   const [shareNotification, setShareNotification] = useState<'image' | 'params' | null>(null);
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [variationMenuOpen, setVariationMenuOpen] = useState(false);
 
   const handleDownload = async () => {
     if (!latestImage) return;
     await downloadImage(latestImage.image, latestImage.params);
   };
 
-  const handleShare = async () => {
+  const handleShareCopyImage = async () => {
     if (!latestImage) return;
 
     // Try to copy image first
@@ -39,13 +65,42 @@ export default function MainCanvas({
     if (imageCopied) {
       setShareNotification('image');
       setTimeout(() => setShareNotification(null), 2000);
-    } else {
-      // Fallback to copying params as text
-      const paramsCopied = copyParamsAsText(latestImage.params);
-      if (paramsCopied) {
-        setShareNotification('params');
-        setTimeout(() => setShareNotification(null), 2000);
+    }
+  };
+
+  const handleShareCopyParams = () => {
+    if (!latestImage) return;
+    const paramsCopied = copyParamsAsText(latestImage.params);
+    if (paramsCopied) {
+      setShareNotification('params');
+      setTimeout(() => setShareNotification(null), 2000);
+    }
+  };
+
+  const handleShareExportJson = () => {
+    if (!latestImage) return;
+    exportParamsAsJSON(latestImage.params);
+  };
+
+  const handleShareLink = async () => {
+    if (!latestImage) return;
+    try {
+      if (!navigator.share) {
+        handleShareCopyParams();
+        return;
       }
+
+      const response = await fetch(latestImage.image);
+      const blob = await response.blob();
+      const file = new File([blob], 'forge-share.png', { type: blob.type });
+      await navigator.share({
+        title: 'Forge Generation',
+        text: latestImage.params?.prompt || 'Forge image',
+        files: [file],
+        url: window.location.href,
+      });
+    } catch (error) {
+      console.error('Share failed:', error);
     }
   };
 
@@ -63,9 +118,26 @@ export default function MainCanvas({
     onGenerate();
   };
 
+  const handleUpscale = () => {
+    if (!latestImage || !onVariation) return;
+
+    onVariation({
+      ...latestImage.params,
+      enable_hr: true,
+      hr_scale: latestImage.params.hr_scale ?? 2.0,
+      hr_denoising_strength: latestImage.params.hr_denoising_strength ?? 0.4,
+    });
+    onGenerate();
+  };
+
   const handleFullscreen = () => {
     setFullscreenIndex(0);
     setShowFullscreen(true);
+  };
+
+  const handleDownloadAll = async () => {
+    if (history.length === 0) return;
+    await downloadAllImages(history);
   };
 
   const handleFullscreenNavigate = (direction: 'prev' | 'next') => {
@@ -77,6 +149,9 @@ export default function MainCanvas({
   };
 
   const currentFullscreenImage = history[fullscreenIndex]?.image || latestImage?.image;
+
+  const showInpaintCanvas = workflowMode === 'inpaint' && uploadedImage && onMaskChange;
+  const showSourcePreview = workflowMode === 'img2img' && uploadedImage && !latestImage;
 
   return (
     <>
@@ -92,19 +167,51 @@ export default function MainCanvas({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <div className="generating-spinner">
-                  <Loader2 size={48} className="spinner-icon" />
-                </div>
-                <h3 className="generating-title">Generating Image...</h3>
-                <div className="generating-progress">
-                  <motion.div
-                    className="progress-bar"
-                    initial={{ width: 0 }}
-                    animate={{ width: '75%' }}
-                    transition={{ duration: 3, ease: 'linear' }}
-                  />
-                </div>
-                <p className="generating-subtitle">Step 15 / 20</p>
+                {showLivePreview && previewImage ? (
+                  <div className="preview-container">
+                    <img src={previewImage} alt="Preview" className="preview-image" />
+                    <div className="preview-overlay">
+                      <div className="generating-spinner">
+                        <Loader2 size={32} className="spinner-icon" />
+                      </div>
+                      <p className="generating-subtitle">
+                        Step {currentStep} / {totalSteps}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="generating-spinner">
+                      <Loader2 size={48} className="spinner-icon" />
+                    </div>
+                    <h3 className="generating-title">Generating Image...</h3>
+                    <div className="generating-progress">
+                      <motion.div
+                        className="progress-bar"
+                        initial={{ width: 0 }}
+                        animate={{ width: '75%' }}
+                        transition={{ duration: 3, ease: 'linear' }}
+                      />
+                    </div>
+                    <p className="generating-subtitle">
+                      Step {currentStep} / {totalSteps}
+                    </p>
+                  </>
+                )}
+              </motion.div>
+            ) : showInpaintCanvas ? (
+              <motion.div
+                key="inpaint"
+                className="image-display"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+              >
+                <InpaintCanvas
+                  baseImage={uploadedImage as string}
+                  maskImage={inpaintMask}
+                  onMaskChange={onMaskChange as (maskDataUrl: string | null) => void}
+                />
               </motion.div>
             ) : latestImage ? (
               <motion.div
@@ -125,7 +232,11 @@ export default function MainCanvas({
                   >
                     <Download size={18} />
                   </button>
-                  <button className="image-action-btn" title="Share" onClick={handleShare}>
+                  <button
+                    className="image-action-btn"
+                    title="Share"
+                    onClick={() => setShareMenuOpen((prev) => !prev)}
+                  >
                     <Share2 size={18} />
                     {shareNotification && (
                       <motion.div
@@ -138,14 +249,85 @@ export default function MainCanvas({
                         {shareNotification === 'image' ? 'Copied!' : 'Params copied!'}
                       </motion.div>
                     )}
+                    {shareMenuOpen && (
+                      <div className="image-action-menu">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleShareCopyImage();
+                            setShareMenuOpen(false);
+                          }}
+                        >
+                          Copy Image
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleShareCopyParams();
+                            setShareMenuOpen(false);
+                          }}
+                        >
+                          Copy Params
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleShareExportJson();
+                            setShareMenuOpen(false);
+                          }}
+                        >
+                          Export JSON
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleShareLink();
+                            setShareMenuOpen(false);
+                          }}
+                        >
+                          Share Link
+                        </button>
+                      </div>
+                    )}
                   </button>
                   <button
                     className="image-action-btn"
                     title="Variations"
-                    onClick={handleVariation}
+                    onClick={() => setVariationMenuOpen((prev) => !prev)}
                   >
                     <Repeat size={18} />
+                    {variationMenuOpen && (
+                      <div className="image-action-menu">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleVariation();
+                            setVariationMenuOpen(false);
+                          }}
+                        >
+                          Random Variation
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleUpscale();
+                            setVariationMenuOpen(false);
+                          }}
+                        >
+                          Upscale (Hires Fix)
+                        </button>
+                      </div>
+                    )}
                   </button>
+                  {history.length > 1 && (
+                    <button
+                      className="image-action-btn"
+                      title="Download All"
+                      onClick={handleDownloadAll}
+                    >
+                      <Download size={18} />
+                    </button>
+                  )}
                   <button
                     className="image-action-btn"
                     title="Fullscreen"
@@ -154,6 +336,16 @@ export default function MainCanvas({
                     <Maximize2 size={18} />
                   </button>
                 </div>
+              </motion.div>
+            ) : showSourcePreview ? (
+              <motion.div
+                key="source"
+                className="image-display"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+              >
+                <img src={uploadedImage as string} alt="Source" />
               </motion.div>
             ) : (
             <motion.div

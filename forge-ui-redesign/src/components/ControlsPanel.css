@@ -137,6 +137,55 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Prompt Enhancement Buttons */
+.prompt-enhancements {
+  margin-top: var(--space-sm);
+}
+
+.enhancement-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.enhancement-label {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: var(--space-xs);
+}
+
+.enhance-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.enhance-btn:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.enhance-btn:active {
+  transform: translateY(0);
+}
+
 /* Aspect Ratio Grid */
 .aspect-grid {
   display: grid;
@@ -684,4 +733,16 @@
   background: var(--gradient-primary);
   box-shadow: 0 0 16px rgba(255, 0, 0, 0.6);
   transition: width 0.3s ease-out;
+}
+
+.batch-footer-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-top: 1px solid var(--border-subtle);
+  position: sticky;
+  bottom: 0;
+  background: rgba(10, 14, 39, 0.92);
+  z-index: 10;
 }

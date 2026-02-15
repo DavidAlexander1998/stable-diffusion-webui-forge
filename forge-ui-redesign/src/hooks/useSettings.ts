@@ -1,17 +1,46 @@
 import { useState, useEffect } from 'react';
+import { ControlMode } from '../types';
 
 export interface AppSettings {
+  // Core Settings
   autoSaveImages: boolean;
   showLivePreview: boolean;
   confirmBeforeGenerate: boolean;
+  
+  // Image Settings
+  saveFormat: 'png' | 'jpg' | 'webp';
+  imageQuality: number; // 1-100 for jpg/webp
+  embedMetadata: boolean;
+  
+  // UI Settings
+  theme: 'dark' | 'light' | 'auto';
+  defaultControlMode: ControlMode;
+  
+  // Generation Settings
+  autoHiresFix: boolean; // Auto-enable Hires Fix for resolutions > 1024
+  nsfwFilter: boolean;
 }
 
 const SETTINGS_KEY = 'forge-ui-settings';
 
 const DEFAULT_SETTINGS: AppSettings = {
+  // Core Settings
   autoSaveImages: false,
   showLivePreview: true,
-  confirmBeforeGenerate: false
+  confirmBeforeGenerate: false,
+  
+  // Image Settings
+  saveFormat: 'png',
+  imageQuality: 95,
+  embedMetadata: true,
+  
+  // UI Settings
+  theme: 'dark',
+  defaultControlMode: 'standard',
+  
+  // Generation Settings
+  autoHiresFix: false,
+  nsfwFilter: false
 };
 
 export function useSettings() {

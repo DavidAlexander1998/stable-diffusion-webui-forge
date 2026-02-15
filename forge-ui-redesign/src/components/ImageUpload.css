@@ -50,6 +50,45 @@
 .image-dropzone:hover {
   border-color: var(--accent-primary);
   background: rgba(255, 0, 0, 0.05);
+
+.image-resize-controls {
+  position: absolute;
+  left: var(--space-sm);
+  bottom: var(--space-sm);
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.resize-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.resize-toggle button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  transition: all 0.2s;
+}
+
+.resize-toggle button.active {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background: rgba(255, 0, 0, 0.2);
+}
   transform: translateY(-2px);
 }
 

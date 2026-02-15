@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import {
@@ -6,13 +6,18 @@ import {
   validateImageFile,
   getImageDimensions,
   formatFileSize,
+  resizeImageIfNeeded,
+  resizeImageToCover,
 } from '../utils/imageUtils';
 import './ImageUpload.css';
 
 interface ImageUploadProps {
   onImageSelect: (base64: string) => void;
+  onImagesSelect?: (base64List: string[]) => void;
   onRemove: () => void;
   currentImage?: string;
+  allowMultiple?: boolean;
+  maxFiles?: number;
   maxWidth?: number;
   maxHeight?: number;
   label?: string;
@@ -20,8 +25,11 @@ interface ImageUploadProps {
 
 export default function ImageUpload({
   onImageSelect,
+  onImagesSelect,
   onRemove,
   currentImage,
+  allowMultiple = false,
+  maxFiles = 10,
   maxWidth = 2048,
   maxHeight = 2048,
   label = 'Upload Image',
@@ -29,8 +37,29 @@ export default function ImageUpload({
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [originalDimensions, setOriginalDimensions] = useState<{ width: number; height: number } | null>(null);
   const [fileSize, setFileSize] = useState<number | null>(null);
+  const [originalBase64, setOriginalBase64] = useState<string | null>(null);
+  const [resizeMode, setResizeMode] = useState<'fit' | 'crop'>('fit');
+  const [needsResize, setNeedsResize] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const applyResizeMode = useCallback(
+    async (base64: string, dims: { width: number; height: number }) => {
+      if (dims.width <= maxWidth && dims.height <= maxHeight) {
+        setNeedsResize(false);
+        return base64;
+      }
+
+      setNeedsResize(true);
+      if (resizeMode === 'crop') {
+        return resizeImageToCover(base64, maxWidth, maxHeight);
+      }
+
+      return resizeImageIfNeeded(base64, maxWidth, maxHeight);
+    },
+    [maxHeight, maxWidth, resizeMode]
+  );
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -44,29 +73,67 @@ export default function ImageUpload({
       }
 
       try {
-        // Convert to base64
         const base64 = await fileToBase64(file);
+        setOriginalBase64(base64);
 
-        // Get dimensions
         const dims = await getImageDimensions(base64);
-        setDimensions(dims);
+        setOriginalDimensions(dims);
+        let finalBase64 = await applyResizeMode(base64, dims);
+        let finalDims = dims;
         setFileSize(file.size);
 
-        // Check if dimensions exceed limits
         if (dims.width > maxWidth || dims.height > maxHeight) {
           setError(
-            `Image dimensions (${dims.width}x${dims.height}) exceed maximum (${maxWidth}x${maxHeight}). Image will be resized.`
+            `Image dimensions (${dims.width}x${dims.height}) exceed maximum (${maxWidth}x${maxHeight}). Resize tools are available.`
           );
         }
 
+        if (finalBase64 !== base64) {
+          finalDims = await getImageDimensions(finalBase64);
+        }
+
+        setDimensions(finalDims);
+
         // Call parent handler
-        onImageSelect(base64);
+        onImageSelect(finalBase64);
       } catch (err) {
         console.error('Failed to process image:', err);
         setError('Failed to process image. Please try another file.');
       }
     },
-    [maxWidth, maxHeight, onImageSelect]
+    [applyResizeMode, maxHeight, maxWidth, onImageSelect]
+  );
+
+  const handleFiles = useCallback(
+    async (files: File[]) => {
+      if (!allowMultiple) {
+        if (files[0]) {
+          await handleFile(files[0]);
+        }
+        return;
+      }
+
+      const limitedFiles = files.slice(0, maxFiles);
+      const base64List: string[] = [];
+
+      for (const file of limitedFiles) {
+        const validation = validateImageFile(file);
+        if (!validation.valid) {
+          setError(validation.error || 'Invalid file');
+          return;
+        }
+
+        const base64 = await fileToBase64(file);
+        base64List.push(base64);
+      }
+
+      if (onImagesSelect) {
+        onImagesSelect(base64List);
+      } else if (base64List[0]) {
+        onImageSelect(base64List[0]);
+      }
+    },
+    [allowMultiple, handleFile, maxFiles, onImageSelect, onImagesSelect]
   );
 
   const handleDragEnter = (e: React.DragEvent) => {
@@ -93,14 +160,14 @@ export default function ImageUpload({
 
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-      handleFile(files[0]);
+      handleFiles(files);
     }
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      handleFile(files[0]);
+      handleFiles(Array.from(files));
     }
   };
 
@@ -111,12 +178,27 @@ export default function ImageUpload({
   const handleRemove = () => {
     setError(null);
     setDimensions(null);
+    setOriginalDimensions(null);
     setFileSize(null);
+    setOriginalBase64(null);
+    setNeedsResize(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
     onRemove();
   };
+
+  useEffect(() => {
+    const reapplyResize = async () => {
+      if (!originalBase64 || !originalDimensions || !needsResize) return;
+      const updatedBase64 = await applyResizeMode(originalBase64, originalDimensions);
+      if (updatedBase64 !== currentImage) {
+        onImageSelect(updatedBase64);
+      }
+    };
+
+    reapplyResize();
+  }, [applyResizeMode, currentImage, needsResize, onImageSelect, originalBase64, originalDimensions]);
 
   return (
     <div className="image-upload-container">
@@ -124,6 +206,7 @@ export default function ImageUpload({
         ref={fileInputRef}
         type="file"
         accept="image/png,image/jpeg,image/jpg,image/webp"
+        multiple={allowMultiple}
         onChange={handleFileInputChange}
         style={{ display: 'none' }}
       />
@@ -150,6 +233,28 @@ export default function ImageUpload({
                 <span className="image-filesize">{formatFileSize(fileSize)}</span>
               )}
             </div>
+
+            {needsResize && (
+              <div className="image-resize-controls">
+                <span>Resize Mode</span>
+                <div className="resize-toggle">
+                  <button
+                    className={resizeMode === 'fit' ? 'active' : ''}
+                    onClick={() => setResizeMode('fit')}
+                    type="button"
+                  >
+                    Fit
+                  </button>
+                  <button
+                    className={resizeMode === 'crop' ? 'active' : ''}
+                    onClick={() => setResizeMode('crop')}
+                    type="button"
+                  >
+                    Crop
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Remove Button */}
             <button className="image-remove-btn" onClick={handleRemove} title="Remove image">

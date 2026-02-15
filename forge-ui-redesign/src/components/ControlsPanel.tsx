@@ -9,10 +9,20 @@ import {
   Settings,
   Zap,
 } from 'lucide-react';
-import { ControlMode, GenerationParams, WorkflowMode, PromptType, LoRAConfig } from '../types';
+import {
+  ControlMode,
+  GenerationParams,
+  WorkflowMode,
+  PromptType,
+  LoRAConfig,
+  ControlNetUnit,
+} from '../types';
 import { AppSettings } from '../hooks/useSettings';
 import { LoraPanel } from './LoraPanel';
 import { HiresFixPanel } from './HiresFixPanel';
+import ControlNetPanel from './ControlNetPanel';
+import BatchPanel, { BatchItem, BatchOptions } from './BatchPanel';
+import ExtrasPanel, { ExtrasOptions } from './ExtrasPanel';
 import ImageUpload from './ImageUpload';
 import { useModels } from '../hooks/useModels';
 import './ControlsPanel.css';
@@ -33,6 +43,24 @@ interface ControlsPanelProps {
   onImageRemove?: () => void;
   settings?: AppSettings;
   onSettingsChange?: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
+  usePreviousSeed?: boolean;
+  onUsePreviousSeedChange?: (value: boolean) => void;
+  batchItems?: BatchItem[];
+  batchOptions?: BatchOptions;
+  onBatchOptionsChange?: (options: BatchOptions) => void;
+  onBatchAddImages?: (images: string[]) => void;
+  onBatchUpdateItem?: (id: number, updates: Partial<BatchItem>) => void;
+  onBatchRemoveItem?: (id: number) => void;
+  onBatchClear?: () => void;
+  onBatchRun?: () => void;
+  batchRunning?: boolean;
+  extrasImage?: string | null;
+  extrasOptions?: ExtrasOptions;
+  onExtrasOptionsChange?: (options: ExtrasOptions) => void;
+  onExtrasImageSelect?: (image: string) => void;
+  onExtrasImageRemove?: () => void;
+  onExtrasRun?: () => void;
+  extrasRunning?: boolean;
 }
 
 const ASPECT_RATIOS = [
@@ -53,6 +81,24 @@ export default function ControlsPanel({
   onGenerate,
   settings,
   onSettingsChange,
+  usePreviousSeed = false,
+  onUsePreviousSeedChange,
+  batchItems = [],
+  batchOptions,
+  onBatchOptionsChange,
+  onBatchAddImages,
+  onBatchUpdateItem,
+  onBatchRemoveItem,
+  onBatchClear,
+  onBatchRun,
+  batchRunning = false,
+  extrasImage,
+  extrasOptions,
+  onExtrasOptionsChange,
+  onExtrasImageSelect,
+  onExtrasImageRemove,
+  onExtrasRun,
+  extrasRunning = false,
   isGenerating = false,
   progress = 0,
   currentStep = 0,
@@ -69,6 +115,7 @@ export default function ControlsPanel({
   const [showAdvancedSampling, setShowAdvancedSampling] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [promptType, setPromptType] = useState<PromptType>('simple');
+  const [showControlNet, setShowControlNet] = useState(false);
 
   // Get models from API
   const {
@@ -78,12 +125,15 @@ export default function ControlsPanel({
     loraModels,
     sdModels,
     vaes,
+    controlNetModels,
+    controlNetModules,
     isLoading: modelsLoading,
     refreshLoras,
   } = useModels();
 
   // Initialize loras if not present
   const [loras, setLoras] = useState<LoRAConfig[]>([]);
+  const [controlNetUnits, setControlNetUnits] = useState<ControlNetUnit[]>([]);
 
   useEffect(() => {
     if (params._loras) {
@@ -91,9 +141,23 @@ export default function ControlsPanel({
     }
   }, [params._loras]);
 
+  useEffect(() => {
+    if (params.alwayson_scripts?.controlnet?.args) {
+      setControlNetUnits(params.alwayson_scripts.controlnet.args);
+    }
+  }, [params.alwayson_scripts]);
+
   const handleLorasChange = (newLoras: LoRAConfig[]) => {
     setLoras(newLoras);
     onParamsChange({ ...params, _loras: newLoras });
+  };
+
+  const handleControlNetChange = (units: ControlNetUnit[]) => {
+    setControlNetUnits(units);
+    const nextAlwaysOn = units.length
+      ? { ...(params.alwayson_scripts ?? {}), controlnet: { args: units } }
+      : undefined;
+    onParamsChange({ ...params, alwayson_scripts: nextAlwaysOn });
   };
 
   const isMinimal = mode === 'minimal';
@@ -105,6 +169,7 @@ export default function ControlsPanel({
   const showLoRAPanel = isAdvanced || isExpert;
   const showHiresPanel = isAdvanced || isExpert;
   const showAdvancedParams = isExpert;
+  const showControlNetPanel = isAdvanced || isExpert;
 
   return (
     <div className="controls-panel card">
@@ -191,6 +256,67 @@ export default function ControlsPanel({
         <div className="prompt-hints">
           <span className="char-count">{params.prompt.length} chars</span>
         </div>
+
+        {/* Prompt Enhancement Buttons (Standard+) */}
+        {!isMinimal && (
+          <div className="prompt-enhancements">
+            <div className="enhancement-row">
+              <span className="enhancement-label">Quick Enhance:</span>
+              <button
+                type="button"
+                className="enhance-btn"
+                onClick={() => {
+                  const enhanced = params.prompt
+                    ? `${params.prompt}, masterpiece, best quality, highly detailed`
+                    : 'masterpiece, best quality, highly detailed';
+                  onParamsChange({ ...params, prompt: enhanced });
+                }}
+                title="Add quality tags"
+              >
+                +Quality
+              </button>
+              <button
+                type="button"
+                className="enhance-btn"
+                onClick={() => {
+                  const enhanced = params.prompt
+                    ? `${params.prompt}, photorealistic, realistic, professional photography`
+                    : 'photorealistic, realistic, professional photography';
+                  onParamsChange({ ...params, prompt: enhanced });
+                }}
+                title="Add photorealistic tags"
+              >
+                +Photo
+              </button>
+              <button
+                type="button"
+                className="enhance-btn"
+                onClick={() => {
+                  const enhanced = params.prompt
+                    ? `${params.prompt}, anime, manga, high quality anime style`
+                    : 'anime, manga, high quality anime style';
+                  onParamsChange({ ...params, prompt: enhanced });
+                }}
+                title="Add anime style tags"
+              >
+                +Anime
+              </button>
+              <button
+                type="button"
+                className="enhance-btn"
+                onClick={() => {
+                  const enhanced = params.prompt
+                    ? `${params.prompt}, artistic, beautiful, aesthetic, trending on artstation`
+                    : 'artistic, beautiful, aesthetic, trending on artstation';
+                  onParamsChange({ ...params, prompt: enhanced });
+                }}
+                title="Add artistic tags"
+              >
+                +Artistic
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Negative Prompt */}
@@ -205,6 +331,64 @@ export default function ControlsPanel({
           }
           rows={isMinimal ? 2 : 3}
         />
+
+        {/* Negative Prompt Presets (Standard+) */}
+        {!isMinimal && (
+          <div className="prompt-enhancements">
+            <div className="enhancement-row">
+              <span className="enhancement-label">Negatives:</span>
+              <button
+                type="button"
+                className="enhance-btn"
+                onClick={() => {
+                  const neg = 'low quality, worst quality, blurry, bad anatomy, bad proportions';
+                  onParamsChange({
+                    ...params,
+                    negative_prompt: params.negative_prompt
+                      ? `${params.negative_prompt}, ${neg}`
+                      : neg,
+                  });
+                }}
+                title="Add standard negative tags"
+              >
+                Standard
+              </button>
+              <button
+                type="button"
+                className="enhance-btn"
+                onClick={() => {
+                  const neg =
+                    'illustration, painting, drawing, art, sketch, low quality, blurry, grainy';
+                  onParamsChange({
+                    ...params,
+                    negative_prompt: params.negative_prompt
+                      ? `${params.negative_prompt}, ${neg}`
+                      : neg,
+                  });
+                }}
+                title="Add photo negative tags"
+              >
+                Photo
+              </button>
+              <button
+                type="button"
+                className="enhance-btn"
+                onClick={() => {
+                  const neg = 'realistic, photo, photorealistic, 3d, low quality, worst quality';
+                  onParamsChange({
+                    ...params,
+                    negative_prompt: params.negative_prompt
+                      ? `${params.negative_prompt}, ${neg}`
+                      : neg,
+                  });
+                }}
+                title="Add anime negative tags"
+              >
+                Anime
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Image Upload (img2img and inpaint only) */}
@@ -221,6 +405,34 @@ export default function ControlsPanel({
             />
           </div>
         )}
+
+      {workflowMode === 'batch' && batchOptions && onBatchOptionsChange && (
+        <BatchPanel
+          items={batchItems}
+          options={batchOptions}
+          onOptionsChange={onBatchOptionsChange}
+          onAddImages={onBatchAddImages ?? (() => undefined)}
+          onUpdateItem={onBatchUpdateItem ?? (() => undefined)}
+          onRemoveItem={onBatchRemoveItem ?? (() => undefined)}
+          onClear={onBatchClear ?? (() => undefined)}
+          onRun={onBatchRun ?? (() => undefined)}
+          isRunning={batchRunning}
+          availableUpscalers={upscalers.map((upscaler) => upscaler.name)}
+        />
+      )}
+
+      {workflowMode === 'extras' && extrasOptions && onExtrasOptionsChange && (
+        <ExtrasPanel
+          image={extrasImage ?? null}
+          onImageSelect={onExtrasImageSelect ?? (() => undefined)}
+          onImageRemove={onExtrasImageRemove ?? (() => undefined)}
+          options={extrasOptions}
+          onOptionsChange={onExtrasOptionsChange}
+          onRun={onExtrasRun ?? (() => undefined)}
+          isRunning={extrasRunning}
+          availableUpscalers={upscalers.map((upscaler) => upscaler.name)}
+        />
+      )}
 
       {/* Model Selection (Standard+) */}
       {!isMinimal && sdModels.length > 0 && (
@@ -484,6 +696,42 @@ export default function ControlsPanel({
         </>
       )}
 
+      {/* ControlNet (Advanced+) */}
+      {showControlNetPanel && (
+        <>
+          <button
+            className="advanced-toggle"
+            onClick={() => setShowControlNet(!showControlNet)}
+          >
+            <span>ControlNet</span>
+            <motion.div
+              animate={{ rotate: showControlNet ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown size={16} />
+            </motion.div>
+          </button>
+
+          <AnimatePresence>
+            {showControlNet && (
+              <motion.div
+                className="advanced-options"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <ControlNetPanel
+                  units={controlNetUnits}
+                  availableModels={controlNetModels}
+                  availableModules={controlNetModules}
+                  onUnitsChange={handleControlNetChange}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>
+      )}
+
       {/* Image Settings */}
       <button
         className="advanced-toggle"
@@ -533,8 +781,8 @@ export default function ControlsPanel({
               </div>
             </div>
 
-            {/* img2img Denoising Strength */}
-            {workflowMode === 'img2img' && (
+            {/* img2img/inpaint Denoising Strength */}
+            {(workflowMode === 'img2img' || workflowMode === 'inpaint') && (
               <div className="control-section">
                 <label className="control-label">
                   Denoising Strength
@@ -558,6 +806,134 @@ export default function ControlsPanel({
                   <span>Keep Original</span>
                   <span>Full Rework</span>
                 </div>
+              </div>
+            )}
+
+            {(workflowMode === 'img2img' || workflowMode === 'inpaint') && (
+              <div className="control-section">
+                <label className="control-label">Resize Mode</label>
+                <select
+                  value={params.resize_mode ?? 0}
+                  onChange={(e) =>
+                    onParamsChange({
+                      ...params,
+                      resize_mode: parseInt(e.target.value, 10),
+                    })
+                  }
+                  className="model-select"
+                >
+                  <option value={0}>Just Resize</option>
+                  <option value={1}>Crop and Resize</option>
+                  <option value={2}>Resize and Fill</option>
+                </select>
+              </div>
+            )}
+
+            {workflowMode === 'inpaint' && (
+              <>
+                <div className="control-section">
+                  <label className="control-label">
+                    Mask Blur
+                    <span className="control-value">{params.mask_blur ?? 4}</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="64"
+                    value={params.mask_blur ?? 4}
+                    onChange={(e) =>
+                      onParamsChange({
+                        ...params,
+                        mask_blur: parseInt(e.target.value, 10),
+                      })
+                    }
+                    className="slider"
+                  />
+                </div>
+
+                <div className="control-section">
+                  <label className="control-label">Inpaint Area</label>
+                  <select
+                    value={
+                      params.inpaint_full_res
+                        ? (params.inpaint_full_res_padding ?? 0) > 0
+                          ? 'padding'
+                          : 'masked'
+                        : 'full'
+                    }
+                    onChange={(e) =>
+                      onParamsChange({
+                        ...params,
+                        inpaint_full_res: e.target.value !== 'full',
+                        inpaint_full_res_padding:
+                          e.target.value === 'padding'
+                            ? params.inpaint_full_res_padding || 32
+                            : 0,
+                      })
+                    }
+                    className="model-select"
+                  >
+                    <option value="full">Whole Picture</option>
+                    <option value="masked">Only Masked</option>
+                    <option value="padding">Only Masked Padding</option>
+                  </select>
+                </div>
+
+                {params.inpaint_full_res && (params.inpaint_full_res_padding ?? 0) > 0 && (
+                  <div className="control-section">
+                    <label className="control-label">
+                      Mask Padding
+                      <span className="control-value">
+                        {params.inpaint_full_res_padding ?? 32}px
+                      </span>
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="128"
+                      value={params.inpaint_full_res_padding ?? 32}
+                      onChange={(e) =>
+                        onParamsChange({
+                          ...params,
+                          inpaint_full_res_padding: parseInt(e.target.value, 10),
+                        })
+                      }
+                      className="slider"
+                    />
+                  </div>
+                )}
+
+                <div className="control-section">
+                  <label className="control-label">Inpaint Fill</label>
+                  <select
+                    value={params.inpainting_fill ?? 1}
+                    onChange={(e) =>
+                      onParamsChange({
+                        ...params,
+                        inpainting_fill: parseInt(e.target.value, 10),
+                      })
+                    }
+                    className="model-select"
+                  >
+                    <option value={0}>Fill</option>
+                    <option value={1}>Original</option>
+                    <option value={2}>Latent Noise</option>
+                    <option value={3}>Latent Nothing</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            {(workflowMode === 'img2img' || workflowMode === 'inpaint') && (
+              <div className="control-section">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={usePreviousSeed}
+                    onChange={(e) => onUsePreviousSeedChange?.(e.target.checked)}
+                  />
+                  <span>Use seed from previous image</span>
+                </label>
               </div>
             )}
 
@@ -791,10 +1167,11 @@ export default function ControlsPanel({
           <motion.div
             className="settings-panel"
             initial={{ opacity: 0, maxHeight: 0 }}
-            animate={{ opacity: 1, maxHeight: 500 }}
+            animate={{ opacity: 1, maxHeight: 800 }}
             exit={{ opacity: 0, maxHeight: 0 }}
             transition={{ duration: 0.2 }}
           >
+            {/* Application Settings */}
             <div className="settings-section">
               <h4>Application Settings</h4>
               <div className="setting-item">
@@ -804,7 +1181,7 @@ export default function ControlsPanel({
                     checked={settings?.autoSaveImages ?? false}
                     onChange={(e) => onSettingsChange?.('autoSaveImages', e.target.checked)}
                   />
-                  <span>Auto-save images</span>
+                  <span>Auto-save images after generation</span>
                 </label>
               </div>
               <div className="setting-item">
@@ -814,7 +1191,7 @@ export default function ControlsPanel({
                     checked={settings?.showLivePreview ?? true}
                     onChange={(e) => onSettingsChange?.('showLivePreview', e.target.checked)}
                   />
-                  <span>Show live preview</span>
+                  <span>Show live preview during generation</span>
                 </label>
               </div>
               <div className="setting-item">
@@ -828,47 +1205,172 @@ export default function ControlsPanel({
                 </label>
               </div>
             </div>
+
+            {/* Image Settings */}
+            <div className="settings-section">
+              <h4>Image Settings</h4>
+              <div className="control-section">
+                <label className="control-label">Save Format</label>
+                <select
+                  value={settings?.saveFormat ?? 'png'}
+                  onChange={(e) => onSettingsChange?.('saveFormat', e.target.value as 'png' | 'jpg' | 'webp')}
+                  className="model-select"
+                >
+                  <option value="png">PNG (Lossless)</option>
+                  <option value="jpg">JPEG (Smaller file size)</option>
+                  <option value="webp">WebP (Best compression)</option>
+                </select>
+              </div>
+
+              {(settings?.saveFormat === 'jpg' || settings?.saveFormat === 'webp') && (
+                <div className="control-group">
+                  <label className="control-label">
+                    Image Quality: {settings?.imageQuality ?? 95}%
+                  </label>
+                  <input
+                    type="range"
+                    min="60"
+                    max="100"
+                    value={settings?.imageQuality ?? 95}
+                    onChange={(e) => onSettingsChange?.('imageQuality', parseInt(e.target.value, 10))}
+                    className="slider"
+                  />
+                </div>
+              )}
+
+              <div className="setting-item">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={settings?.embedMetadata ?? true}
+                    onChange={(e) => onSettingsChange?.('embedMetadata', e.target.checked)}
+                  />
+                  <span>Embed generation metadata in images</span>
+                </label>
+              </div>
+            </div>
+
+            {/* UI Settings */}
+            <div className="settings-section">
+              <h4>UI Settings</h4>
+              <div className="control-section">
+                <label className="control-label">Theme</label>
+                <select
+                  value={settings?.theme ?? 'dark'}
+                  onChange={(e) => onSettingsChange?.('theme', e.target.value as 'dark' | 'light' | 'auto')}
+                  className="model-select"
+                >
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                  <option value="auto">Auto (System)</option>
+                </select>
+              </div>
+
+              <div className="control-section">
+                <label className="control-label">Default Control Mode</label>
+                <select
+                  value={settings?.defaultControlMode ?? 'standard'}
+                  onChange={(e) => onSettingsChange?.('defaultControlMode', e.target.value as ControlMode)}
+                  className="model-select"
+                >
+                  <option value="minimal">Minimal</option>
+                  <option value="standard">Standard</option>
+                  <option value="advanced">Advanced</option>
+                  <option value="expert">Expert</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Generation Settings */}
+            <div className="settings-section">
+              <h4>Generation Settings</h4>
+              <div className="setting-item">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={settings?.autoHiresFix ?? false}
+                    onChange={(e) => onSettingsChange?.('autoHiresFix', e.target.checked)}
+                  />
+                  <span>Auto-enable Hires Fix for large resolutions (&gt;1024px)</span>
+                </label>
+              </div>
+              <div className="setting-item">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={settings?.nsfwFilter ?? false}
+                    onChange={(e) => onSettingsChange?.('nsfwFilter', e.target.checked)}
+                  />
+                  <span>Enable NSFW content filter</span>
+                </label>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Generate Button with Progress */}
-      <motion.button
-        className="generate-btn"
-        onClick={onGenerate}
-        disabled={isGenerating || !params.prompt.trim()}
-        whileHover={{ scale: isGenerating ? 1 : 1.02 }}
-        whileTap={{ scale: isGenerating ? 1 : 0.98 }}
-      >
-        {isGenerating ? (
-          <>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-            >
-              <Sparkles size={20} />
-            </motion.div>
-            <span>
-              Generating... {currentStep}/{totalSteps} ({(progress * 100).toFixed(0)}%)
-            </span>
-          </>
-        ) : (
-          <>
-            <Sparkles size={20} />
-            <span>Generate</span>
-          </>
-        )}
-      </motion.button>
-
-      {isGenerating && (
-        <div className="progress-bar">
-          <motion.div
-            className="progress-fill"
-            initial={{ width: '0%' }}
-            animate={{ width: `${progress * 100}%` }}
-            transition={{ duration: 0.3 }}
-          />
+      {workflowMode === 'batch' && (
+        <div className="batch-footer-controls">
+          <button
+            className="batch-clear"
+            onClick={() => onBatchClear?.()}
+            type="button"
+            disabled={batchRunning}
+          >
+            Clear
+          </button>
+          <button
+            className="batch-run"
+            onClick={() => onBatchRun?.()}
+            type="button"
+            disabled={batchItems.length === 0 || batchRunning}
+          >
+            {batchRunning ? 'Running...' : 'Run Batch'}
+          </button>
         </div>
+      )}
+
+      {/* Generate Button with Progress */}
+      {workflowMode !== 'batch' && workflowMode !== 'extras' && (
+        <>
+          <motion.button
+            className="generate-btn"
+            onClick={onGenerate}
+            disabled={isGenerating || !params.prompt.trim()}
+            whileHover={{ scale: isGenerating ? 1 : 1.02 }}
+            whileTap={{ scale: isGenerating ? 1 : 0.98 }}
+          >
+            {isGenerating ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                >
+                  <Sparkles size={20} />
+                </motion.div>
+                <span>
+                  Generating... {currentStep}/{totalSteps} ({(progress * 100).toFixed(0)}%)
+                </span>
+              </>
+            ) : (
+              <>
+                <Sparkles size={20} />
+                <span>Generate</span>
+              </>
+            )}
+          </motion.button>
+
+          {isGenerating && (
+            <div className="progress-bar">
+              <motion.div
+                className="progress-fill"
+                initial={{ width: '0%' }}
+                animate={{ width: `${progress * 100}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

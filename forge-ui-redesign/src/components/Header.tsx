@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import {  Sparkles, Settings, Cpu, Clock, Wifi, WifiOff } from 'lucide-react';
+import {  Sparkles, Settings, Cpu, Clock, Wifi, WifiOff, Folder } from 'lucide-react';
 import { useApiStatus } from '../hooks/useApiStatus';
+import { useSystemStatus } from '../hooks/useSystemStatus';
 import SettingsModal from './SettingsModal';
 import './Header.css';
 
 interface HeaderProps {
   selectedModel: string;
   onModelChange: (model: string) => void;
+  onOpenPresets?: () => void;
 }
 
 const MODELS = [
@@ -17,11 +19,11 @@ const MODELS = [
   'juggernautXL_v9.safetensors',
 ];
 
-export default function Header({ selectedModel, onModelChange }: HeaderProps) {
+export default function Header({ selectedModel, onModelChange, onOpenPresets }: HeaderProps) {
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [gpuUsage] = useState(65);
   const apiStatus = useApiStatus();
+  const systemStatus = useSystemStatus();
 
   return (
     <motion.header
@@ -105,11 +107,13 @@ export default function Header({ selectedModel, onModelChange }: HeaderProps) {
                 <motion.div
                   className="gpu-fill"
                   initial={{ width: 0 }}
-                  animate={{ width: `${gpuUsage}%` }}
+                  animate={{ width: `${systemStatus.gpuUsage}%` }}
                   transition={{ duration: 1, delay: 0.5 }}
                 />
               </div>
-              <span className="status-value">{gpuUsage}%</span>
+              <span className="status-value" title={`${systemStatus.gpuMemoryUsed.toFixed(1)}GB / ${systemStatus.gpuMemoryTotal.toFixed(1)}GB`}>
+                {systemStatus.gpuUsage}%
+              </span>
             </div>
           </div>
 
@@ -117,13 +121,22 @@ export default function Header({ selectedModel, onModelChange }: HeaderProps) {
             <Clock size={16} />
             <div className="status-details">
               <span className="status-label">Queue</span>
-              <span className="status-value">0 / 0</span>
+              <span className="status-value">{systemStatus.queueRunning} / {systemStatus.queuePending}</span>
             </div>
           </div>
         </div>
 
+        {/* Presets Button */}
+        <button 
+          className="header-settings" 
+          onClick={() => onOpenPresets?.()}  
+          title="Workflow Presets"
+        >
+          <Folder size={20} />
+        </button>
+
         {/* Settings Button */}
-        <button className="header-settings" onClick={() => setShowSettings(true)}>
+        <button className="header-settings" onClick={() => setShowSettings(true)} title="Settings">
           <Settings size={20} />
         </button>
       </div>

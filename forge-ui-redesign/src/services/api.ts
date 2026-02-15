@@ -188,6 +188,23 @@ class ForgeAPI {
     });
   }
 
+  // ===== Extras =====
+
+  async extraSingleImage(params: {
+    image: string;
+    upscaler_1: string;
+    upscaling_resize: number;
+    use_codeformer: boolean;
+    codeformer_weight: number;
+    gfpgan_visibility: number;
+    tiling?: boolean;
+  }): Promise<{ image: string }> {
+    return this.request<{ image: string }>('/sdapi/v1/extra-single-image', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  }
+
   // ===== Health Check =====
 
   async ping(): Promise<boolean> {
