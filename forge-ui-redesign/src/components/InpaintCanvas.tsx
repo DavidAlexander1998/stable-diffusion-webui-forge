@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
-import { Brush, Eraser, Trash2, Upload, FlipHorizontal } from 'lucide-react';
-import { fileToBase64 } from '../utils/imageUtils';
-import './InpaintCanvas.css';
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
+import { Brush, Eraser, Trash2, Upload, FlipHorizontal } from "lucide-react";
+import { fileToBase64 } from "../utils/imageUtils";
+import "./InpaintCanvas.css";
 
 interface InpaintCanvasProps {
   baseImage: string;
@@ -10,7 +10,7 @@ interface InpaintCanvasProps {
   onMaskChange: (maskDataUrl: string | null) => void;
 }
 
-type ToolMode = 'brush' | 'eraser';
+type ToolMode = "brush" | "eraser";
 
 export default function InpaintCanvas({
   baseImage,
@@ -23,7 +23,7 @@ export default function InpaintCanvas({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
 
-  const [tool, setTool] = useState<ToolMode>('brush');
+  const [tool, setTool] = useState<ToolMode>("brush");
   const [brushSize, setBrushSize] = useState(40);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasMask, setHasMask] = useState(false);
@@ -41,7 +41,7 @@ export default function InpaintCanvas({
     displayCanvas.width = Math.max(1, Math.floor(width));
     displayCanvas.height = Math.max(1, Math.floor(height));
 
-    const ctx = displayCanvas.getContext('2d');
+    const ctx = displayCanvas.getContext("2d");
     if (!ctx) return;
 
     ctx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
@@ -53,9 +53,14 @@ export default function InpaintCanvas({
     if (!maskCanvas) return;
 
     const hasPixels = (() => {
-      const ctx = maskCanvas.getContext('2d');
+      const ctx = maskCanvas.getContext("2d");
       if (!ctx) return false;
-      const { data } = ctx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+      const { data } = ctx.getImageData(
+        0,
+        0,
+        maskCanvas.width,
+        maskCanvas.height,
+      );
       for (let i = 3; i < data.length; i += 4) {
         if (data[i] !== 0) return true;
       }
@@ -63,7 +68,7 @@ export default function InpaintCanvas({
     })();
 
     setHasMask(hasPixels);
-    onMaskChange(hasPixels ? maskCanvas.toDataURL('image/png') : null);
+    onMaskChange(hasPixels ? maskCanvas.toDataURL("image/png") : null);
   }, [onMaskChange]);
 
   const initializeMaskCanvas = useCallback(() => {
@@ -75,7 +80,7 @@ export default function InpaintCanvas({
     maskCanvas.width = img.naturalWidth || img.width;
     maskCanvas.height = img.naturalHeight || img.height;
 
-    const ctx = maskCanvas.getContext('2d');
+    const ctx = maskCanvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
 
@@ -102,8 +107,8 @@ export default function InpaintCanvas({
       syncDisplayCanvas();
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [syncDisplayCanvas]);
 
   const getCanvasCoords = (event: ReactPointerEvent<HTMLCanvasElement>) => {
@@ -126,14 +131,15 @@ export default function InpaintCanvas({
     const point = getCanvasCoords(event);
     if (!maskCanvas || !point) return;
 
-    const ctx = maskCanvas.getContext('2d');
+    const ctx = maskCanvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
     ctx.lineWidth = brushSize;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+    ctx.globalCompositeOperation =
+      tool === "eraser" ? "destination-out" : "source-over";
 
     const lastPoint = lastPointRef.current ?? point;
     ctx.beginPath();
@@ -167,7 +173,7 @@ export default function InpaintCanvas({
   const handleClearMask = () => {
     const maskCanvas = maskCanvasRef.current;
     if (!maskCanvas) return;
-    const ctx = maskCanvas.getContext('2d');
+    const ctx = maskCanvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
     syncDisplayCanvas();
@@ -177,10 +183,15 @@ export default function InpaintCanvas({
   const handleInvertMask = () => {
     const maskCanvas = maskCanvasRef.current;
     if (!maskCanvas) return;
-    const ctx = maskCanvas.getContext('2d');
+    const ctx = maskCanvas.getContext("2d");
     if (!ctx) return;
 
-    const imageData = ctx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+    const imageData = ctx.getImageData(
+      0,
+      0,
+      maskCanvas.width,
+      maskCanvas.height,
+    );
     const { data } = imageData;
 
     for (let i = 0; i < data.length; i += 4) {
@@ -205,7 +216,7 @@ export default function InpaintCanvas({
     const maskCanvas = maskCanvasRef.current;
     if (!maskCanvas) return;
 
-    const ctx = maskCanvas.getContext('2d');
+    const ctx = maskCanvas.getContext("2d");
     if (!ctx) return;
 
     const img = new Image();
@@ -223,16 +234,16 @@ export default function InpaintCanvas({
       <div className="inpaint-toolbar">
         <div className="tool-group">
           <button
-            className={`tool-btn ${tool === 'brush' ? 'active' : ''}`}
-            onClick={() => setTool('brush')}
+            className={`tool-btn ${tool === "brush" ? "active" : ""}`}
+            onClick={() => setTool("brush")}
             title="Brush"
             type="button"
           >
             <Brush size={16} />
           </button>
           <button
-            className={`tool-btn ${tool === 'eraser' ? 'active' : ''}`}
-            onClick={() => setTool('eraser')}
+            className={`tool-btn ${tool === "eraser" ? "active" : ""}`}
+            onClick={() => setTool("eraser")}
             title="Eraser"
             type="button"
           >
@@ -254,10 +265,20 @@ export default function InpaintCanvas({
         </div>
 
         <div className="tool-group">
-          <button className="tool-btn" onClick={handleClearMask} title="Clear mask" type="button">
+          <button
+            className="tool-btn"
+            onClick={handleClearMask}
+            title="Clear mask"
+            type="button"
+          >
             <Trash2 size={16} />
           </button>
-          <button className="tool-btn" onClick={handleInvertMask} title="Invert mask" type="button">
+          <button
+            className="tool-btn"
+            onClick={handleInvertMask}
+            title="Invert mask"
+            type="button"
+          >
             <FlipHorizontal size={16} />
           </button>
           <button
@@ -276,7 +297,7 @@ export default function InpaintCanvas({
               const file = event.target.files?.[0];
               if (file) handleMaskUpload(file);
             }}
-            style={{ display: 'none' }}
+            style={{ display: "none" }}
           />
         </div>
       </div>
@@ -293,7 +314,7 @@ export default function InpaintCanvas({
         />
         <canvas
           ref={displayCanvasRef}
-          className={hasMask ? 'has-mask' : ''}
+          className={hasMask ? "has-mask" : ""}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}

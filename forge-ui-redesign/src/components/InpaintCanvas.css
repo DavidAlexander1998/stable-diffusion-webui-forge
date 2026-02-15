@@ -35,7 +35,7 @@
   color: var(--text-tertiary);
 }
 
-.slider-group input[type='range'] {
+.slider-group input[type="range"] {
   width: 160px;
 }
 

@@ -197,7 +197,7 @@
 }
 
 .toggle-track::after {
-  content: '';
+  content: "";
   position: absolute;
   width: 14px;
   height: 14px;

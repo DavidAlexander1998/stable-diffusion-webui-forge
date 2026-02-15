@@ -1,46 +1,46 @@
-import { useState, useEffect } from 'react';
-import { ControlMode } from '../types';
+import { useState, useEffect } from "react";
+import { ControlMode } from "../types";
 
 export interface AppSettings {
   // Core Settings
   autoSaveImages: boolean;
   showLivePreview: boolean;
   confirmBeforeGenerate: boolean;
-  
+
   // Image Settings
-  saveFormat: 'png' | 'jpg' | 'webp';
+  saveFormat: "png" | "jpg" | "webp";
   imageQuality: number; // 1-100 for jpg/webp
   embedMetadata: boolean;
-  
+
   // UI Settings
-  theme: 'dark' | 'light' | 'auto';
+  theme: "dark" | "light" | "auto";
   defaultControlMode: ControlMode;
-  
+
   // Generation Settings
   autoHiresFix: boolean; // Auto-enable Hires Fix for resolutions > 1024
   nsfwFilter: boolean;
 }
 
-const SETTINGS_KEY = 'forge-ui-settings';
+const SETTINGS_KEY = "forge-ui-settings";
 
 const DEFAULT_SETTINGS: AppSettings = {
   // Core Settings
   autoSaveImages: false,
   showLivePreview: true,
   confirmBeforeGenerate: false,
-  
+
   // Image Settings
-  saveFormat: 'png',
+  saveFormat: "png",
   imageQuality: 95,
   embedMetadata: true,
-  
+
   // UI Settings
-  theme: 'dark',
-  defaultControlMode: 'standard',
-  
+  theme: "dark",
+  defaultControlMode: "standard",
+
   // Generation Settings
   autoHiresFix: false,
-  nsfwFilter: false
+  nsfwFilter: false,
 };
 
 export function useSettings() {
@@ -52,7 +52,7 @@ export function useSettings() {
         return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
       }
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      console.error("Failed to load settings:", error);
     }
     return DEFAULT_SETTINGS;
   });
@@ -62,13 +62,13 @@ export function useSettings() {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      console.error("Failed to save settings:", error);
     }
   }, [settings]);
 
   const updateSetting = <K extends keyof AppSettings>(
     key: K,
-    value: AppSettings[K]
+    value: AppSettings[K],
   ) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
@@ -80,6 +80,6 @@ export function useSettings() {
   return {
     settings,
     updateSetting,
-    resetSettings
+    resetSettings,
   };
 }

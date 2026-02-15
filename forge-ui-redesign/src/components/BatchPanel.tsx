@@ -1,14 +1,14 @@
-import { Trash2, Play, Upload } from 'lucide-react';
-import ImageUpload from './ImageUpload';
-import './BatchPanel.css';
+import { Trash2, Play, Upload } from "lucide-react";
+import ImageUpload from "./ImageUpload";
+import "./BatchPanel.css";
 
-export type BatchOperation = 'img2img' | 'inpaint' | 'upscale' | 'face_restore';
+export type BatchOperation = "img2img" | "inpaint" | "upscale" | "face_restore";
 
 export interface BatchItem {
   id: number;
   image: string;
   mask?: string;
-  status: 'queued' | 'processing' | 'done' | 'failed';
+  status: "queued" | "processing" | "done" | "failed";
   result?: string;
   overridePrompt?: string;
   overrideDenoising?: number;
@@ -56,7 +56,12 @@ export default function BatchPanel({
           <p>Run the same settings across multiple images.</p>
         </div>
         <div className="batch-actions">
-          <button className="batch-clear" onClick={onClear} type="button" disabled={isRunning}>
+          <button
+            className="batch-clear"
+            onClick={onClear}
+            type="button"
+            disabled={isRunning}
+          >
             <Trash2 size={14} />
             Clear
           </button>
@@ -67,7 +72,7 @@ export default function BatchPanel({
             disabled={items.length === 0 || isRunning}
           >
             <Play size={14} />
-            {isRunning ? 'Running...' : 'Run Batch'}
+            {isRunning ? "Running..." : "Run Batch"}
           </button>
         </div>
       </div>
@@ -91,7 +96,8 @@ export default function BatchPanel({
           </select>
         </label>
 
-        {(options.operation === 'upscale' || options.operation === 'face_restore') && (
+        {(options.operation === "upscale" ||
+          options.operation === "face_restore") && (
           <>
             <label>
               Upscaler
@@ -213,10 +219,12 @@ export default function BatchPanel({
                 </button>
               </div>
 
-              {options.operation === 'inpaint' && (
+              {options.operation === "inpaint" && (
                 <div className="batch-mask">
                   <ImageUpload
-                    onImageSelect={(base64) => onUpdateItem(item.id, { mask: base64 })}
+                    onImageSelect={(base64) =>
+                      onUpdateItem(item.id, { mask: base64 })
+                    }
                     onRemove={() => onUpdateItem(item.id, { mask: undefined })}
                     currentImage={item.mask}
                     label="Mask"
@@ -229,14 +237,17 @@ export default function BatchPanel({
                   Prompt Override
                   <input
                     type="text"
-                    value={item.overridePrompt ?? ''}
+                    value={item.overridePrompt ?? ""}
                     onChange={(event) =>
-                      onUpdateItem(item.id, { overridePrompt: event.target.value })
+                      onUpdateItem(item.id, {
+                        overridePrompt: event.target.value,
+                      })
                     }
                     placeholder="Leave blank to use main prompt"
                   />
                 </label>
-                {(options.operation === 'img2img' || options.operation === 'inpaint') && (
+                {(options.operation === "img2img" ||
+                  options.operation === "inpaint") && (
                   <label>
                     Denoising
                     <input
@@ -271,7 +282,12 @@ export default function BatchPanel({
       )}
 
       <div className="batch-footer">
-        <button className="batch-clear" onClick={onClear} type="button" disabled={isRunning}>
+        <button
+          className="batch-clear"
+          onClick={onClear}
+          type="button"
+          disabled={isRunning}
+        >
           <Trash2 size={14} />
           Clear
         </button>
@@ -282,7 +298,7 @@ export default function BatchPanel({
           disabled={items.length === 0 || isRunning}
         >
           <Play size={14} />
-          {isRunning ? 'Running...' : 'Run Batch'}
+          {isRunning ? "Running..." : "Run Batch"}
         </button>
       </div>
     </div>

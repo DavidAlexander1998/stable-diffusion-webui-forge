@@ -1,5 +1,5 @@
-import ImageUpload from './ImageUpload';
-import './ExtrasPanel.css';
+import ImageUpload from "./ImageUpload";
+import "./ExtrasPanel.css";
 
 export interface ExtrasOptions {
   upscaler: string;
@@ -43,7 +43,7 @@ export default function ExtrasPanel({
           onClick={onRun}
           disabled={!image || isRunning}
         >
-          {isRunning ? 'Processing...' : 'Run Extras'}
+          {isRunning ? "Processing..." : "Run Extras"}
         </button>
       </div>
 

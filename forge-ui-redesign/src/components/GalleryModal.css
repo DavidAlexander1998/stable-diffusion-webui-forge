@@ -14,7 +14,11 @@
 }
 
 .gallery-modal {
-  background: linear-gradient(135deg, rgba(30, 30, 40, 0.98), rgba(20, 20, 30, 0.98));
+  background: linear-gradient(
+    135deg,
+    rgba(30, 30, 40, 0.98),
+    rgba(20, 20, 30, 0.98)
+  );
   border: 1px solid rgba(139, 92, 246, 0.3);
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -225,7 +229,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent 50%, rgba(0, 0, 0, 0.5));
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.9),
+    transparent 50%,
+    rgba(0, 0, 0, 0.5)
+  );
   opacity: 0;
   transition: opacity 0.2s;
   display: flex;

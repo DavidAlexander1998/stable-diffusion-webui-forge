@@ -22,25 +22,25 @@ export async function downloadImage(
   imageData: string,
   metadata?: ImageMetadata,
   options?: {
-    format?: 'png' | 'jpg' | 'webp';
+    format?: "png" | "jpg" | "webp";
     quality?: number; // 0-1 for jpg/webp
     embedMetadata?: boolean;
-  }
+  },
 ): Promise<void> {
-  const format = options?.format ?? 'png';
+  const format = options?.format ?? "png";
   const quality = options?.quality ?? 0.95;
   const embedMetadata = options?.embedMetadata ?? true;
-  
+
   // Generate filename
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
   const seed = metadata?.seed ?? Math.floor(Math.random() * 1000000);
-  const extension = format === 'jpg' ? 'jpg' : format;
+  const extension = format === "jpg" ? "jpg" : format;
   const filename = `forge_${timestamp}_${seed}.${extension}`;
 
   let finalData = imageData;
 
   // Convert format if needed
-  if (format !== 'png') {
+  if (format !== "png") {
     try {
       const img = new Image();
       await new Promise((resolve, reject) => {
@@ -49,36 +49,36 @@ export async function downloadImage(
         img.src = imageData;
       });
 
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = img.width;
       canvas.height = img.height;
 
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (!ctx) {
-        throw new Error('Failed to get canvas context');
+        throw new Error("Failed to get canvas context");
       }
 
       ctx.drawImage(img, 0, 0);
-      
-      const mimeType = format === 'jpg' ? 'image/jpeg' : `image/${format}`;
+
+      const mimeType = format === "jpg" ? "image/jpeg" : `image/${format}`;
       finalData = canvas.toDataURL(mimeType, quality);
     } catch (error) {
-      console.error('Failed to convert image format, using original:', error);
+      console.error("Failed to convert image format, using original:", error);
     }
   }
 
   // Embed metadata for PNG only
-  if (metadata && embedMetadata && format === 'png') {
+  if (metadata && embedMetadata && format === "png") {
     try {
       const metadataText = JSON.stringify(metadata);
-      finalData = embedPngTextChunk(finalData, 'parameters', metadataText);
+      finalData = embedPngTextChunk(finalData, "parameters", metadataText);
     } catch (error) {
-      console.error('Failed to embed metadata, using original image:', error);
+      console.error("Failed to embed metadata, using original image:", error);
     }
   }
 
   // Create download link
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = finalData;
   link.download = filename;
   document.body.appendChild(link);
@@ -89,7 +89,9 @@ export async function downloadImage(
 /**
  * Copy image to clipboard
  */
-export async function copyImageToClipboard(imageData: string): Promise<boolean> {
+export async function copyImageToClipboard(
+  imageData: string,
+): Promise<boolean> {
   try {
     // Convert base64 to blob
     const response = await fetch(imageData);
@@ -104,7 +106,7 @@ export async function copyImageToClipboard(imageData: string): Promise<boolean> 
 
     return true;
   } catch (error) {
-    console.error('Failed to copy image to clipboard:', error);
+    console.error("Failed to copy image to clipboard:", error);
     return false;
   }
 }
@@ -116,12 +118,12 @@ export function copyParamsAsText(metadata: ImageMetadata): boolean {
   try {
     const text = Object.entries(metadata)
       .map(([key, value]) => `${key}: ${value}`)
-      .join('\n');
+      .join("\n");
 
     navigator.clipboard.writeText(text);
     return true;
   } catch (error) {
-    console.error('Failed to copy params to clipboard:', error);
+    console.error("Failed to copy params to clipboard:", error);
     return false;
   }
 }
@@ -131,10 +133,10 @@ export function copyParamsAsText(metadata: ImageMetadata): boolean {
  */
 export function exportParamsAsJSON(metadata: ImageMetadata): void {
   const json = JSON.stringify(metadata, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
+  const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
 
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
   link.download = `forge_params_${Date.now()}.json`;
   document.body.appendChild(link);
@@ -151,10 +153,10 @@ export function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === 'string') {
+      if (typeof reader.result === "string") {
         resolve(reader.result);
       } else {
-        reject(new Error('Failed to convert file to base64'));
+        reject(new Error("Failed to convert file to base64"));
       }
     };
     reader.onerror = reject;
@@ -170,11 +172,11 @@ export function validateImageFile(file: File): {
   error?: string;
 } {
   // Check file type
-  const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+  const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
   if (!validTypes.includes(file.type)) {
     return {
       valid: false,
-      error: 'Invalid file type. Please upload PNG, JPEG, or WebP.',
+      error: "Invalid file type. Please upload PNG, JPEG, or WebP.",
     };
   }
 
@@ -183,7 +185,7 @@ export function validateImageFile(file: File): {
   if (file.size > maxSize) {
     return {
       valid: false,
-      error: 'File too large. Maximum size is 10MB.',
+      error: "File too large. Maximum size is 10MB.",
     };
   }
 
@@ -194,7 +196,7 @@ export function validateImageFile(file: File): {
  * Get image dimensions from base64
  */
 export function getImageDimensions(
-  base64: string
+  base64: string,
 ): Promise<{ width: number; height: number }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -212,7 +214,7 @@ export function getImageDimensions(
 export async function resizeImageIfNeeded(
   base64: string,
   maxWidth: number = 2048,
-  maxHeight: number = 2048
+  maxHeight: number = 2048,
 ): Promise<string> {
   const dims = await getImageDimensions(base64);
 
@@ -227,13 +229,13 @@ export async function resizeImageIfNeeded(
   const newHeight = Math.floor(dims.height * ratio);
 
   // Create canvas and resize
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = newWidth;
   canvas.height = newHeight;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) {
-    throw new Error('Failed to get canvas context');
+    throw new Error("Failed to get canvas context");
   }
 
   const img = new Image();
@@ -244,7 +246,7 @@ export async function resizeImageIfNeeded(
   });
 
   ctx.drawImage(img, 0, 0, newWidth, newHeight);
-  return canvas.toDataURL('image/png');
+  return canvas.toDataURL("image/png");
 }
 
 /**
@@ -253,7 +255,7 @@ export async function resizeImageIfNeeded(
 export async function resizeImageToCover(
   base64: string,
   targetWidth: number,
-  targetHeight: number
+  targetHeight: number,
 ): Promise<string> {
   const dims = await getImageDimensions(base64);
 
@@ -263,13 +265,13 @@ export async function resizeImageToCover(
   const offsetX = Math.floor((targetWidth - scaledWidth) / 2);
   const offsetY = Math.floor((targetHeight - scaledHeight) / 2);
 
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = targetWidth;
   canvas.height = targetHeight;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) {
-    throw new Error('Failed to get canvas context');
+    throw new Error("Failed to get canvas context");
   }
 
   const img = new Image();
@@ -280,13 +282,15 @@ export async function resizeImageToCover(
   });
 
   ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
-  return canvas.toDataURL('image/png');
+  return canvas.toDataURL("image/png");
 }
 
 /**
  * Download all images in a history list
  */
-export async function downloadAllImages(images: Array<{ image: string; params?: ImageMetadata }>) {
+export async function downloadAllImages(
+  images: Array<{ image: string; params?: ImageMetadata }>,
+) {
   for (const item of images) {
     await downloadImage(item.image, item.params);
   }
@@ -304,40 +308,48 @@ export function extractBase64(dataUrl: string): string {
  * Format file size
  */
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
 
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
 }
 
-function embedPngTextChunk(dataUrl: string, keyword: string, text: string): string {
-  const base64 = dataUrl.split(',')[1];
+function embedPngTextChunk(
+  dataUrl: string,
+  keyword: string,
+  text: string,
+): string {
+  const base64 = dataUrl.split(",")[1];
   if (!base64) {
-    throw new Error('Invalid data URL');
+    throw new Error("Invalid data URL");
   }
 
   const bytes = base64ToUint8(base64);
   const signature = bytes.slice(0, 8);
   const pngSignature = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
   if (!arraysEqual(signature, pngSignature)) {
-    throw new Error('Not a PNG image');
+    throw new Error("Not a PNG image");
   }
 
   const textData = new TextEncoder().encode(`${keyword}\u0000${text}`);
-  const chunkType = new TextEncoder().encode('tEXt');
+  const chunkType = new TextEncoder().encode("tEXt");
   const chunkLength = uint32ToBytes(textData.length);
   const crc = uint32ToBytes(crc32(concatUint8(chunkType, textData)));
   const textChunk = concatUint8(chunkLength, chunkType, textData, crc);
 
-  const iendIndex = findChunkIndex(bytes, 'IEND');
+  const iendIndex = findChunkIndex(bytes, "IEND");
   if (iendIndex === -1) {
-    throw new Error('PNG missing IEND');
+    throw new Error("PNG missing IEND");
   }
 
-  const output = concatUint8(bytes.slice(0, iendIndex), textChunk, bytes.slice(iendIndex));
+  const output = concatUint8(
+    bytes.slice(0, iendIndex),
+    textChunk,
+    bytes.slice(iendIndex),
+  );
   return `data:image/png;base64,${uint8ToBase64(output)}`;
 }
 
@@ -345,7 +357,9 @@ function findChunkIndex(bytes: Uint8Array, type: string): number {
   let offset = 8;
   while (offset < bytes.length) {
     const length = bytesToUint32(bytes.slice(offset, offset + 4));
-    const chunkType = new TextDecoder().decode(bytes.slice(offset + 4, offset + 8));
+    const chunkType = new TextDecoder().decode(
+      bytes.slice(offset + 4, offset + 8),
+    );
     if (chunkType === type) {
       return offset;
     }
@@ -396,7 +410,7 @@ function base64ToUint8(base64: string): Uint8Array {
 }
 
 function uint8ToBase64(bytes: Uint8Array): string {
-  let binary = '';
+  let binary = "";
   bytes.forEach((byte) => {
     binary += String.fromCharCode(byte);
   });

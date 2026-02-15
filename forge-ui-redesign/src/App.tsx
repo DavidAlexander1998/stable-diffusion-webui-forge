@@ -1,43 +1,49 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import WorkflowSidebar from './components/WorkflowSidebar';
-import MainCanvas from './components/MainCanvas';
-import ControlsPanel from './components/ControlsPanel';
-import Header from './components/Header';
-import ErrorModal from './components/ErrorModal';
-import { ConfirmModal } from './components/ConfirmModal';
-import PresetManager from './components/PresetManager';
-import { WorkflowMode, ControlMode, GenerationParams } from './types';
-import { useGeneration } from './hooks/useGeneration';
-import { useProgress } from './hooks/useProgress';
-import { useSettings } from './hooks/useSettings';
-import { downloadImage, ImageMetadata, extractBase64 } from './utils/imageUtils';
-import { extractBase64 } from './utils/imageUtils';
-import { forgeAPI } from './services/api';
-import type { BatchItem, BatchOptions } from './components/BatchPanel';
-import type { ExtrasOptions } from './components/ExtrasPanel';
-import './App.css';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import WorkflowSidebar from "./components/WorkflowSidebar";
+import MainCanvas from "./components/MainCanvas";
+import ControlsPanel from "./components/ControlsPanel";
+import Header from "./components/Header";
+import ErrorModal from "./components/ErrorModal";
+import { ConfirmModal } from "./components/ConfirmModal";
+import PresetManager from "./components/PresetManager";
+import { WorkflowMode, ControlMode, GenerationParams } from "./types";
+import { useGeneration } from "./hooks/useGeneration";
+import { useProgress } from "./hooks/useProgress";
+import { useSettings } from "./hooks/useSettings";
+import {
+  downloadImage,
+  ImageMetadata,
+  extractBase64,
+} from "./utils/imageUtils";
+import { extractBase64 } from "./utils/imageUtils";
+import { forgeAPI } from "./services/api";
+import type { BatchItem, BatchOptions } from "./components/BatchPanel";
+import type { ExtrasOptions } from "./components/ExtrasPanel";
+import "./App.css";
 
 function App() {
-  const [workflowMode, setWorkflowMode] = useState<WorkflowMode>('txt2img');
+  const [workflowMode, setWorkflowMode] = useState<WorkflowMode>("txt2img");
   const { settings, updateSetting } = useSettings();
-  const [controlMode, setControlMode] = useState<ControlMode>(settings.defaultControlMode ?? 'standard');
+  const [controlMode, setControlMode] = useState<ControlMode>(
+    settings.defaultControlMode ?? "standard",
+  );
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [pendingGenerate, setPendingGenerate] = useState(false);
   const [presetManagerOpen, setPresetManagerOpen] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [selectedModel, setSelectedModel] = useState<string>("");
 
   // Initialize params with proper API field names
   const [params, setParams] = useState<GenerationParams>({
-    prompt: '',
-    negative_prompt: '',
+    prompt: "",
+    negative_prompt: "",
     width: 896,
     height: 1152,
     steps: 20,
     cfg_scale: 7,
-    sampler_name: 'DPM++ 2M SDE Karras',
-    scheduler: 'Karras',
+    sampler_name: "DPM++ 2M SDE Karras",
+    scheduler: "Karras",
     seed: -1,
     batch_count: 1,
     batch_size: 1,
@@ -54,7 +60,7 @@ function App() {
     tiling: false,
     enable_hr: false,
     hr_scale: 2.0,
-    hr_upscaler: 'Latent',
+    hr_upscaler: "Latent",
     hr_second_pass_steps: 0,
     hr_denoising_strength: 0.7,
     eta: undefined,
@@ -74,8 +80,8 @@ function App() {
   const [usePreviousSeed, setUsePreviousSeed] = useState(false);
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const [batchOptions, setBatchOptions] = useState<BatchOptions>({
-    operation: 'img2img',
-    upscaler: 'None',
+    operation: "img2img",
+    upscaler: "None",
     scale: 2,
     useCodeformer: false,
     codeformerWeight: 0.5,
@@ -84,7 +90,7 @@ function App() {
   const [batchRunning, setBatchRunning] = useState(false);
   const [extrasImage, setExtrasImage] = useState<string | null>(null);
   const [extrasOptions, setExtrasOptions] = useState<ExtrasOptions>({
-    upscaler: 'None',
+    upscaler: "None",
     scale: 2,
     useCodeformer: false,
     codeformerWeight: 0.5,
@@ -97,15 +103,20 @@ function App() {
       title: string;
       message: string;
       details?: string;
-      type?: 'network' | 'api' | 'validation' | 'unknown';
+      type?: "network" | "api" | "validation" | "unknown";
     };
   }>({
     isOpen: false,
-    error: { title: '', message: '' }
+    error: { title: "", message: "" },
   });
 
   // Use our custom hooks for real API integration
-  const { generate, isGenerating, error: genError, interrupt } = useGeneration();
+  const {
+    generate,
+    isGenerating,
+    error: genError,
+    interrupt,
+  } = useGeneration();
   const {
     progress,
     eta,
@@ -120,15 +131,18 @@ function App() {
   // Handle generation errors
   useEffect(() => {
     if (genError) {
-      console.error('Generation error:', genError);
+      console.error("Generation error:", genError);
       setErrorModal({
         isOpen: true,
         error: {
-          title: 'Generation Failed',
-          message: 'The image generation request could not be completed.',
+          title: "Generation Failed",
+          message: "The image generation request could not be completed.",
           details: genError,
-          type: genError.includes('fetch') || genError.includes('network') ? 'network' : 'api'
-        }
+          type:
+            genError.includes("fetch") || genError.includes("network")
+              ? "network"
+              : "api",
+        },
       });
       stopPolling();
     }
@@ -143,30 +157,30 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         if (errorModal.isOpen) {
           setErrorModal((prev) => ({ ...prev, isOpen: false }));
         }
         return;
       }
 
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'i') {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "i") {
         event.preventDefault();
         interrupt();
         return;
       }
 
-      if (event.key !== 'Enter' || (!event.ctrlKey && !event.metaKey)) return;
+      if (event.key !== "Enter" || (!event.ctrlKey && !event.metaKey)) return;
       event.preventDefault();
 
-      if (workflowMode === 'batch') {
+      if (workflowMode === "batch") {
         if (!batchRunning && batchItems.length > 0) {
           handleBatchRun();
         }
         return;
       }
 
-      if (workflowMode === 'extras') {
+      if (workflowMode === "extras") {
         if (!extrasRunning && extrasImage) {
           handleExtrasRun();
         }
@@ -178,8 +192,8 @@ function App() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
     workflowMode,
     batchRunning,
@@ -198,27 +212,29 @@ function App() {
       const loraStrings = baseParams._loras
         .filter((lora) => lora.enabled)
         .map((lora) => `<lora:${lora.model}:${lora.weight}>`)
-        .join(' ');
+        .join(" ");
       finalPrompt = `${baseParams.prompt} ${loraStrings}`.trim();
     }
     return finalPrompt;
   };
 
   const normalizeImageData = (image: string) =>
-    image.startsWith('data:') ? image : `data:image/png;base64,${image}`;
+    image.startsWith("data:") ? image : `data:image/png;base64,${image}`;
 
   const executeGenerate = async () => {
-    console.log('🚀 Starting generation with params:', params);
+    console.log("🚀 Starting generation with params:", params);
 
     // Auto-enable Hires Fix for large resolutions if setting is enabled
     const effectiveParams = { ...params };
-    if (settings.autoHiresFix && 
-        (params.width > 1024 || params.height > 1024) && 
-        !params.enable_hr) {
+    if (
+      settings.autoHiresFix &&
+      (params.width > 1024 || params.height > 1024) &&
+      !params.enable_hr
+    ) {
       effectiveParams.enable_hr = true;
       effectiveParams.hr_scale = 2;
-      effectiveParams.hr_upscaler = 'Latent';
-      console.log('🔧 Auto-enabled Hires Fix for large resolution');
+      effectiveParams.hr_upscaler = "Latent";
+      console.log("🔧 Auto-enabled Hires Fix for large resolution");
     }
 
     // Prepare params for API
@@ -227,18 +243,24 @@ function App() {
       prompt: buildPromptWithLoras(effectiveParams),
     };
 
-    if (uploadedImage && (workflowMode === 'img2img' || workflowMode === 'inpaint')) {
+    if (
+      uploadedImage &&
+      (workflowMode === "img2img" || workflowMode === "inpaint")
+    ) {
       apiParams.init_images = [extractBase64(uploadedImage)];
     }
 
-    if (usePreviousSeed && (workflowMode === 'img2img' || workflowMode === 'inpaint')) {
+    if (
+      usePreviousSeed &&
+      (workflowMode === "img2img" || workflowMode === "inpaint")
+    ) {
       const lastSeed = history[0]?.params?.seed;
-      if (typeof lastSeed === 'number' && lastSeed >= 0) {
+      if (typeof lastSeed === "number" && lastSeed >= 0) {
         apiParams.seed = lastSeed;
       }
     }
 
-    if (workflowMode === 'inpaint' && inpaintMask) {
+    if (workflowMode === "inpaint" && inpaintMask) {
       apiParams.mask = extractBase64(inpaintMask);
     }
 
@@ -248,7 +270,9 @@ function App() {
         controlnet: {
           args: apiParams.alwayson_scripts.controlnet.args.map((unit) => ({
             ...unit,
-            input_image: unit.input_image ? extractBase64(unit.input_image) : undefined,
+            input_image: unit.input_image
+              ? extractBase64(unit.input_image)
+              : undefined,
             mask: unit.mask ? extractBase64(unit.mask) : undefined,
           })),
         },
@@ -265,7 +289,7 @@ function App() {
     const newJob = {
       id: Date.now(),
       params: { ...apiParams },
-      status: 'generating',
+      status: "generating",
       progress: 0,
     };
     setGenerationQueue((prev) => [...prev, newJob]);
@@ -275,10 +299,10 @@ function App() {
       const result = await generate(apiParams, workflowMode);
 
       if (result && result.images && result.images.length > 0) {
-        console.log('✅ Generation completed!', result);
+        console.log("✅ Generation completed!", result);
 
         const imageData = `data:image/png;base64,${result.images[0]}`;
-        
+
         // Add to history
         setHistory((prev) => [
           {
@@ -307,24 +331,24 @@ function App() {
             height: apiParams.height,
             model: apiParams.sd_model_checkpoint,
           };
-          
+
           await downloadImage(imageData, metadata, {
             format: settings.saveFormat,
             quality: settings.imageQuality / 100,
             embedMetadata: settings.embedMetadata,
           });
-          console.log('📥 Auto-saved image');
+          console.log("📥 Auto-saved image");
         }
 
         // Remove from queue
         setGenerationQueue((prev) => prev.filter((j) => j.id !== newJob.id));
       } else {
-        throw new Error('No images in response');
+        throw new Error("No images in response");
       }
     } catch (err) {
-      console.error('❌ Generation failed:', err);
+      console.error("❌ Generation failed:", err);
       setGenerationQueue((prev) =>
-        prev.map((j) => (j.id === newJob.id ? { ...j, status: 'failed' } : j))
+        prev.map((j) => (j.id === newJob.id ? { ...j, status: "failed" } : j)),
       );
     } finally {
       stopPolling();
@@ -366,8 +390,8 @@ function App() {
   const handleToggleFavorite = (id: number) => {
     setHistory((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
-      )
+        item.id === id ? { ...item, isFavorite: !item.isFavorite } : item,
+      ),
     );
   };
 
@@ -381,8 +405,8 @@ function App() {
   const handleImageUpload = (base64: string) => {
     setUploadedImage(base64);
     // Automatically switch to img2img if not already
-    if (workflowMode !== 'img2img' && workflowMode !== 'inpaint') {
-      setWorkflowMode('img2img');
+    if (workflowMode !== "img2img" && workflowMode !== "inpaint") {
+      setWorkflowMode("img2img");
     }
   };
 
@@ -397,14 +421,16 @@ function App() {
       ...images.map((image, index) => ({
         id: Date.now() + index,
         image,
-        status: 'queued' as const,
+        status: "queued" as const,
         overrideDenoising: params.denoising_strength ?? 0.75,
       })),
     ]);
   };
 
   const handleBatchUpdateItem = (id: number, updates: Partial<BatchItem>) => {
-    setBatchItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...updates } : item)));
+    setBatchItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+    );
   };
 
   const handleBatchRemoveItem = (id: number) => {
@@ -422,12 +448,17 @@ function App() {
     for (const item of batchItems) {
       setBatchItems((prev) =>
         prev.map((current) =>
-          current.id === item.id ? { ...current, status: 'processing' } : current
-        )
+          current.id === item.id
+            ? { ...current, status: "processing" }
+            : current,
+        ),
       );
 
       try {
-        if (batchOptions.operation === 'img2img' || batchOptions.operation === 'inpaint') {
+        if (
+          batchOptions.operation === "img2img" ||
+          batchOptions.operation === "inpaint"
+        ) {
           const apiParams: GenerationParams = {
             ...params,
             prompt: buildPromptWithLoras({
@@ -435,18 +466,22 @@ function App() {
               prompt: item.overridePrompt || params.prompt,
             }),
             init_images: [extractBase64(item.image)],
-            denoising_strength: item.overrideDenoising ?? params.denoising_strength,
+            denoising_strength:
+              item.overrideDenoising ?? params.denoising_strength,
           };
 
-          if (batchOptions.operation === 'inpaint') {
+          if (batchOptions.operation === "inpaint") {
             if (!item.mask) {
-              throw new Error('Missing inpaint mask');
+              throw new Error("Missing inpaint mask");
             }
             apiParams.mask = extractBase64(item.mask);
           }
 
           delete apiParams._loras;
-          const result = await generate(apiParams, batchOptions.operation === 'inpaint' ? 'inpaint' : 'img2img');
+          const result = await generate(
+            apiParams,
+            batchOptions.operation === "inpaint" ? "inpaint" : "img2img",
+          );
           if (result?.images?.[0]) {
             const finalImage = normalizeImageData(result.images[0]);
             setHistory((prev) => [
@@ -462,12 +497,12 @@ function App() {
             setBatchItems((prev) =>
               prev.map((current) =>
                 current.id === item.id
-                  ? { ...current, status: 'done', result: finalImage }
-                  : current
-              )
+                  ? { ...current, status: "done", result: finalImage }
+                  : current,
+              ),
             );
           } else {
-            throw new Error('No batch image returned');
+            throw new Error("No batch image returned");
           }
         } else {
           const response = await forgeAPI.extraSingleImage({
@@ -476,7 +511,8 @@ function App() {
             upscaling_resize: batchOptions.scale,
             use_codeformer: batchOptions.useCodeformer,
             codeformer_weight: batchOptions.codeformerWeight,
-            gfpgan_visibility: batchOptions.operation === 'face_restore' ? 1 : 0,
+            gfpgan_visibility:
+              batchOptions.operation === "face_restore" ? 1 : 0,
             tiling: batchOptions.tileUpscale,
           });
 
@@ -487,24 +523,24 @@ function App() {
               image: finalImage,
               params: params,
               timestamp: new Date(),
-              info: 'extras',
+              info: "extras",
             },
             ...prev,
           ]);
           setBatchItems((prev) =>
             prev.map((current) =>
               current.id === item.id
-                ? { ...current, status: 'done', result: finalImage }
-                : current
-            )
+                ? { ...current, status: "done", result: finalImage }
+                : current,
+            ),
           );
         }
       } catch (error) {
-        console.error('Batch item failed:', error);
+        console.error("Batch item failed:", error);
         setBatchItems((prev) =>
           prev.map((current) =>
-            current.id === item.id ? { ...current, status: 'failed' } : current
-          )
+            current.id === item.id ? { ...current, status: "failed" } : current,
+          ),
         );
       }
     }
@@ -534,13 +570,13 @@ function App() {
           image: finalImage,
           params: params,
           timestamp: new Date(),
-          info: 'extras',
+          info: "extras",
         },
         ...prev,
       ]);
       setLastResult(finalImage);
     } catch (error) {
-      console.error('Extras failed:', error);
+      console.error("Extras failed:", error);
     } finally {
       setExtrasRunning(false);
     }
@@ -554,8 +590,8 @@ function App() {
       {/* Gradient mesh background */}
       <div className="gradient-mesh" />
 
-      <Header 
-        selectedModel={selectedModel} 
+      <Header
+        selectedModel={selectedModel}
         onModelChange={setSelectedModel}
         onOpenPresets={() => setPresetManagerOpen(true)}
       />

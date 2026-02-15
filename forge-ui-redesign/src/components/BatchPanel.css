@@ -70,8 +70,8 @@
 }
 
 .batch-options select,
-.batch-options input[type='text'],
-.batch-options input[type='range'] {
+.batch-options input[type="text"],
+.batch-options input[type="range"] {
   border-radius: 8px;
   border: 1px solid var(--border-subtle);
   background: rgba(0, 0, 0, 0.3);
@@ -162,7 +162,7 @@
   letter-spacing: 0.6px;
 }
 
-.batch-overrides input[type='text'] {
+.batch-overrides input[type="text"] {
   border-radius: 8px;
   border: 1px solid var(--border-subtle);
   background: rgba(0, 0, 0, 0.3);

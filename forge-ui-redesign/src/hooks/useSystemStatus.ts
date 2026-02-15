@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { forgeAPI } from '../services/api';
+import { useState, useEffect } from "react";
+import { forgeAPI } from "../services/api";
 
 export interface SystemStatus {
   gpuUsage: number; // 0-100 percentage
@@ -49,7 +49,8 @@ export function useSystemStatus() {
           if (cudaDevice) {
             gpuMemoryUsed = cudaDevice.used / (1024 * 1024 * 1024); // Convert to GB
             gpuMemoryTotal = cudaDevice.total / (1024 * 1024 * 1024); // Convert to GB
-            gpuUsage = gpuMemoryTotal > 0 ? (gpuMemoryUsed / gpuMemoryTotal) * 100 : 0;
+            gpuUsage =
+              gpuMemoryTotal > 0 ? (gpuMemoryUsed / gpuMemoryTotal) * 100 : 0;
           }
         }
 
@@ -60,10 +61,13 @@ export function useSystemStatus() {
         if (queueData) {
           // Queue data structure varies by implementation
           // Common formats: { pending: [], running: [] } or { queue_pending: N, queue_running: N }
-          if ('queue_pending' in queueData) {
+          if ("queue_pending" in queueData) {
             queuePending = queueData.queue_pending || 0;
             queueRunning = queueData.queue_running || 0;
-          } else if ('pending' in queueData && Array.isArray(queueData.pending)) {
+          } else if (
+            "pending" in queueData &&
+            Array.isArray(queueData.pending)
+          ) {
             queuePending = queueData.pending.length;
             queueRunning = queueData.running?.length || 0;
           }
@@ -86,7 +90,7 @@ export function useSystemStatus() {
         setStatus((prev) => ({
           ...prev,
           isLoading: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         }));
       } finally {
         // Schedule next poll

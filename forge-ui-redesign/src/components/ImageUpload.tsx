@@ -1,6 +1,6 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Upload, X, Image as ImageIcon, AlertCircle } from "lucide-react";
 import {
   fileToBase64,
   validateImageFile,
@@ -8,8 +8,8 @@ import {
   formatFileSize,
   resizeImageIfNeeded,
   resizeImageToCover,
-} from '../utils/imageUtils';
-import './ImageUpload.css';
+} from "../utils/imageUtils";
+import "./ImageUpload.css";
 
 interface ImageUploadProps {
   onImageSelect: (base64: string) => void;
@@ -32,15 +32,21 @@ export default function ImageUpload({
   maxFiles = 10,
   maxWidth = 2048,
   maxHeight = 2048,
-  label = 'Upload Image',
+  label = "Upload Image",
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
-  const [originalDimensions, setOriginalDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [dimensions, setDimensions] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const [originalDimensions, setOriginalDimensions] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const [fileSize, setFileSize] = useState<number | null>(null);
   const [originalBase64, setOriginalBase64] = useState<string | null>(null);
-  const [resizeMode, setResizeMode] = useState<'fit' | 'crop'>('fit');
+  const [resizeMode, setResizeMode] = useState<"fit" | "crop">("fit");
   const [needsResize, setNeedsResize] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -52,13 +58,13 @@ export default function ImageUpload({
       }
 
       setNeedsResize(true);
-      if (resizeMode === 'crop') {
+      if (resizeMode === "crop") {
         return resizeImageToCover(base64, maxWidth, maxHeight);
       }
 
       return resizeImageIfNeeded(base64, maxWidth, maxHeight);
     },
-    [maxHeight, maxWidth, resizeMode]
+    [maxHeight, maxWidth, resizeMode],
   );
 
   const handleFile = useCallback(
@@ -68,7 +74,7 @@ export default function ImageUpload({
       // Validate file
       const validation = validateImageFile(file);
       if (!validation.valid) {
-        setError(validation.error || 'Invalid file');
+        setError(validation.error || "Invalid file");
         return;
       }
 
@@ -84,7 +90,7 @@ export default function ImageUpload({
 
         if (dims.width > maxWidth || dims.height > maxHeight) {
           setError(
-            `Image dimensions (${dims.width}x${dims.height}) exceed maximum (${maxWidth}x${maxHeight}). Resize tools are available.`
+            `Image dimensions (${dims.width}x${dims.height}) exceed maximum (${maxWidth}x${maxHeight}). Resize tools are available.`,
           );
         }
 
@@ -97,11 +103,11 @@ export default function ImageUpload({
         // Call parent handler
         onImageSelect(finalBase64);
       } catch (err) {
-        console.error('Failed to process image:', err);
-        setError('Failed to process image. Please try another file.');
+        console.error("Failed to process image:", err);
+        setError("Failed to process image. Please try another file.");
       }
     },
-    [applyResizeMode, maxHeight, maxWidth, onImageSelect]
+    [applyResizeMode, maxHeight, maxWidth, onImageSelect],
   );
 
   const handleFiles = useCallback(
@@ -119,7 +125,7 @@ export default function ImageUpload({
       for (const file of limitedFiles) {
         const validation = validateImageFile(file);
         if (!validation.valid) {
-          setError(validation.error || 'Invalid file');
+          setError(validation.error || "Invalid file");
           return;
         }
 
@@ -133,7 +139,7 @@ export default function ImageUpload({
         onImageSelect(base64List[0]);
       }
     },
-    [allowMultiple, handleFile, maxFiles, onImageSelect, onImagesSelect]
+    [allowMultiple, handleFile, maxFiles, onImageSelect, onImagesSelect],
   );
 
   const handleDragEnter = (e: React.DragEvent) => {
@@ -183,7 +189,7 @@ export default function ImageUpload({
     setOriginalBase64(null);
     setNeedsResize(false);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
     onRemove();
   };
@@ -191,14 +197,24 @@ export default function ImageUpload({
   useEffect(() => {
     const reapplyResize = async () => {
       if (!originalBase64 || !originalDimensions || !needsResize) return;
-      const updatedBase64 = await applyResizeMode(originalBase64, originalDimensions);
+      const updatedBase64 = await applyResizeMode(
+        originalBase64,
+        originalDimensions,
+      );
       if (updatedBase64 !== currentImage) {
         onImageSelect(updatedBase64);
       }
     };
 
     reapplyResize();
-  }, [applyResizeMode, currentImage, needsResize, onImageSelect, originalBase64, originalDimensions]);
+  }, [
+    applyResizeMode,
+    currentImage,
+    needsResize,
+    onImageSelect,
+    originalBase64,
+    originalDimensions,
+  ]);
 
   return (
     <div className="image-upload-container">
@@ -208,7 +224,7 @@ export default function ImageUpload({
         accept="image/png,image/jpeg,image/jpg,image/webp"
         multiple={allowMultiple}
         onChange={handleFileInputChange}
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
       />
 
       <AnimatePresence mode="wait">
@@ -230,7 +246,9 @@ export default function ImageUpload({
                 </span>
               )}
               {fileSize && (
-                <span className="image-filesize">{formatFileSize(fileSize)}</span>
+                <span className="image-filesize">
+                  {formatFileSize(fileSize)}
+                </span>
               )}
             </div>
 
@@ -239,15 +257,15 @@ export default function ImageUpload({
                 <span>Resize Mode</span>
                 <div className="resize-toggle">
                   <button
-                    className={resizeMode === 'fit' ? 'active' : ''}
-                    onClick={() => setResizeMode('fit')}
+                    className={resizeMode === "fit" ? "active" : ""}
+                    onClick={() => setResizeMode("fit")}
                     type="button"
                   >
                     Fit
                   </button>
                   <button
-                    className={resizeMode === 'crop' ? 'active' : ''}
-                    onClick={() => setResizeMode('crop')}
+                    className={resizeMode === "crop" ? "active" : ""}
+                    onClick={() => setResizeMode("crop")}
                     type="button"
                   >
                     Crop
@@ -257,12 +275,20 @@ export default function ImageUpload({
             )}
 
             {/* Remove Button */}
-            <button className="image-remove-btn" onClick={handleRemove} title="Remove image">
+            <button
+              className="image-remove-btn"
+              onClick={handleRemove}
+              title="Remove image"
+            >
               <X size={18} />
             </button>
 
             {/* Replace Button */}
-            <button className="image-replace-btn" onClick={handleClick} title="Replace image">
+            <button
+              className="image-replace-btn"
+              onClick={handleClick}
+              title="Replace image"
+            >
               <Upload size={16} />
               <span>Replace</span>
             </button>
@@ -270,7 +296,7 @@ export default function ImageUpload({
         ) : (
           <motion.div
             key="dropzone"
-            className={`image-dropzone ${isDragging ? 'dragging' : ''}`}
+            className={`image-dropzone ${isDragging ? "dragging" : ""}`}
             onClick={handleClick}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
@@ -303,10 +329,12 @@ export default function ImageUpload({
             </motion.div>
 
             <h4 className="dropzone-title">
-              {isDragging ? 'Drop image here' : label}
+              {isDragging ? "Drop image here" : label}
             </h4>
             <p className="dropzone-subtitle">
-              {isDragging ? 'Release to upload' : 'Drag and drop or click to browse'}
+              {isDragging
+                ? "Release to upload"
+                : "Drag and drop or click to browse"}
             </p>
             <p className="dropzone-hint">
               PNG, JPEG, WebP • Max {maxWidth}×{maxHeight} • Up to 10MB
@@ -321,7 +349,7 @@ export default function ImageUpload({
           <motion.div
             className="upload-error"
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
             <AlertCircle size={16} />

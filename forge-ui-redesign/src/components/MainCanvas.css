@@ -34,7 +34,11 @@
 .empty-icon-container {
   width: 120px;
   height: 120px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.1) 0%,
+    transparent 70%
+  );
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -76,7 +80,11 @@
 .generating-spinner {
   width: 80px;
   height: 80px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.2) 0%,
+    transparent 70%
+  );
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -85,7 +93,7 @@
 }
 
 .generating-spinner::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -4px;
   background: conic-gradient(from 0deg, transparent, var(--accent-primary));
@@ -348,8 +356,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .queue-item-details {

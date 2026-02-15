@@ -1,17 +1,24 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Share2, Repeat, Maximize2, Loader2, Check } from 'lucide-react';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Download,
+  Share2,
+  Repeat,
+  Maximize2,
+  Loader2,
+  Check,
+} from "lucide-react";
 import {
   downloadImage,
   downloadAllImages,
   copyImageToClipboard,
   copyParamsAsText,
   exportParamsAsJSON,
-} from '../utils/imageUtils';
-import InpaintCanvas from './InpaintCanvas';
-import FullscreenModal from './FullscreenModal';
-import './MainCanvas.css';
-import type { WorkflowMode } from '../types';
+} from "../utils/imageUtils";
+import InpaintCanvas from "./InpaintCanvas";
+import FullscreenModal from "./FullscreenModal";
+import "./MainCanvas.css";
+import type { WorkflowMode } from "../types";
 
 interface MainCanvasProps {
   isGenerating: boolean;
@@ -47,7 +54,9 @@ export default function MainCanvas({
   const latestImage = history[0];
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
-  const [shareNotification, setShareNotification] = useState<'image' | 'params' | null>(null);
+  const [shareNotification, setShareNotification] = useState<
+    "image" | "params" | null
+  >(null);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
   const [variationMenuOpen, setVariationMenuOpen] = useState(false);
 
@@ -63,7 +72,7 @@ export default function MainCanvas({
     const imageCopied = await copyImageToClipboard(latestImage.image);
 
     if (imageCopied) {
-      setShareNotification('image');
+      setShareNotification("image");
       setTimeout(() => setShareNotification(null), 2000);
     }
   };
@@ -72,7 +81,7 @@ export default function MainCanvas({
     if (!latestImage) return;
     const paramsCopied = copyParamsAsText(latestImage.params);
     if (paramsCopied) {
-      setShareNotification('params');
+      setShareNotification("params");
       setTimeout(() => setShareNotification(null), 2000);
     }
   };
@@ -92,15 +101,15 @@ export default function MainCanvas({
 
       const response = await fetch(latestImage.image);
       const blob = await response.blob();
-      const file = new File([blob], 'forge-share.png', { type: blob.type });
+      const file = new File([blob], "forge-share.png", { type: blob.type });
       await navigator.share({
-        title: 'Forge Generation',
-        text: latestImage.params?.prompt || 'Forge image',
+        title: "Forge Generation",
+        text: latestImage.params?.prompt || "Forge image",
         files: [file],
         url: window.location.href,
       });
     } catch (error) {
-      console.error('Share failed:', error);
+      console.error("Share failed:", error);
     }
   };
 
@@ -140,18 +149,21 @@ export default function MainCanvas({
     await downloadAllImages(history);
   };
 
-  const handleFullscreenNavigate = (direction: 'prev' | 'next') => {
-    if (direction === 'prev' && fullscreenIndex < history.length - 1) {
+  const handleFullscreenNavigate = (direction: "prev" | "next") => {
+    if (direction === "prev" && fullscreenIndex < history.length - 1) {
       setFullscreenIndex(fullscreenIndex + 1);
-    } else if (direction === 'next' && fullscreenIndex > 0) {
+    } else if (direction === "next" && fullscreenIndex > 0) {
       setFullscreenIndex(fullscreenIndex - 1);
     }
   };
 
-  const currentFullscreenImage = history[fullscreenIndex]?.image || latestImage?.image;
+  const currentFullscreenImage =
+    history[fullscreenIndex]?.image || latestImage?.image;
 
-  const showInpaintCanvas = workflowMode === 'inpaint' && uploadedImage && onMaskChange;
-  const showSourcePreview = workflowMode === 'img2img' && uploadedImage && !latestImage;
+  const showInpaintCanvas =
+    workflowMode === "inpaint" && uploadedImage && onMaskChange;
+  const showSourcePreview =
+    workflowMode === "img2img" && uploadedImage && !latestImage;
 
   return (
     <>
@@ -169,7 +181,11 @@ export default function MainCanvas({
               >
                 {showLivePreview && previewImage ? (
                   <div className="preview-container">
-                    <img src={previewImage} alt="Preview" className="preview-image" />
+                    <img
+                      src={previewImage}
+                      alt="Preview"
+                      className="preview-image"
+                    />
                     <div className="preview-overlay">
                       <div className="generating-spinner">
                         <Loader2 size={32} className="spinner-icon" />
@@ -189,8 +205,8 @@ export default function MainCanvas({
                       <motion.div
                         className="progress-bar"
                         initial={{ width: 0 }}
-                        animate={{ width: '75%' }}
-                        transition={{ duration: 3, ease: 'linear' }}
+                        animate={{ width: "75%" }}
+                        transition={{ duration: 3, ease: "linear" }}
                       />
                     </div>
                     <p className="generating-subtitle">
@@ -210,7 +226,9 @@ export default function MainCanvas({
                 <InpaintCanvas
                   baseImage={uploadedImage as string}
                   maskImage={inpaintMask}
-                  onMaskChange={onMaskChange as (maskDataUrl: string | null) => void}
+                  onMaskChange={
+                    onMaskChange as (maskDataUrl: string | null) => void
+                  }
                 />
               </motion.div>
             ) : latestImage ? (
@@ -246,7 +264,9 @@ export default function MainCanvas({
                         exit={{ opacity: 0 }}
                       >
                         <Check size={12} />
-                        {shareNotification === 'image' ? 'Copied!' : 'Params copied!'}
+                        {shareNotification === "image"
+                          ? "Copied!"
+                          : "Params copied!"}
                       </motion.div>
                     )}
                     {shareMenuOpen && (
@@ -348,94 +368,94 @@ export default function MainCanvas({
                 <img src={uploadedImage as string} alt="Source" />
               </motion.div>
             ) : (
-            <motion.div
-              key="empty"
-              className="empty-canvas"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="empty-icon-container">
-                <motion.div
-                  className="empty-icon"
-                  animate={{
-                    scale: [1, 1.1, 1],
-                    rotate: [0, 5, -5, 0],
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
-                >
-                  ✨
-                </motion.div>
-              </div>
-              <h3 className="empty-title">Ready to Create</h3>
-              <p className="empty-subtitle">
-                Enter a prompt and hit generate to begin
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Generation Queue */}
-      {queue.length > 0 && (
-        <motion.div
-          className="generation-queue"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="queue-header">
-            <span className="queue-title">Generation Queue</span>
-            <span className="queue-count">{queue.length} pending</span>
-          </div>
-          <div className="queue-items">
-            {queue.map((item) => (
-              <div key={item.id} className="queue-item">
-                <div className="queue-item-indicator" />
-                <div className="queue-item-details">
-                  <span className="queue-item-prompt">
-                    {item.params.prompt.slice(0, 40)}...
-                  </span>
-                  <span className="queue-item-status">{item.status}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* History Carousel */}
-      {history.length > 1 && (
-        <div className="history-carousel">
-          <div className="carousel-title">Recent Generations</div>
-          <div className="carousel-track">
-            {history.slice(1, 7).map((item, index) => (
               <motion.div
-                key={item.id}
-                className="carousel-item"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ scale: 1.05, zIndex: 10 }}
+                key="empty"
+                className="empty-canvas"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
               >
-                <img src={item.image} alt={`Generation ${item.id}`} />
-                <div className="carousel-item-overlay">
-                  <span className="carousel-item-time">
-                    {new Date(item.timestamp).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
+                <div className="empty-icon-container">
+                  <motion.div
+                    className="empty-icon"
+                    animate={{
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 5, -5, 0],
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    ✨
+                  </motion.div>
                 </div>
+                <h3 className="empty-title">Ready to Create</h3>
+                <p className="empty-subtitle">
+                  Enter a prompt and hit generate to begin
+                </p>
               </motion.div>
-            ))}
-          </div>
+            )}
+          </AnimatePresence>
         </div>
-      )}
-    </div>
+
+        {/* Generation Queue */}
+        {queue.length > 0 && (
+          <motion.div
+            className="generation-queue"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="queue-header">
+              <span className="queue-title">Generation Queue</span>
+              <span className="queue-count">{queue.length} pending</span>
+            </div>
+            <div className="queue-items">
+              {queue.map((item) => (
+                <div key={item.id} className="queue-item">
+                  <div className="queue-item-indicator" />
+                  <div className="queue-item-details">
+                    <span className="queue-item-prompt">
+                      {item.params.prompt.slice(0, 40)}...
+                    </span>
+                    <span className="queue-item-status">{item.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* History Carousel */}
+        {history.length > 1 && (
+          <div className="history-carousel">
+            <div className="carousel-title">Recent Generations</div>
+            <div className="carousel-track">
+              {history.slice(1, 7).map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  className="carousel-item"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.05, zIndex: 10 }}
+                >
+                  <img src={item.image} alt={`Generation ${item.id}`} />
+                  <div className="carousel-item-overlay">
+                    <span className="carousel-item-time">
+                      {new Date(item.timestamp).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Fullscreen Modal */}
       <FullscreenModal

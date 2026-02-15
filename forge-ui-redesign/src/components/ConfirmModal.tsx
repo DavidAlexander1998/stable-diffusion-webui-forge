@@ -1,6 +1,6 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, Check, X } from 'lucide-react';
-import './ConfirmModal.css';
+import { motion, AnimatePresence } from "framer-motion";
+import { AlertCircle, Check, X } from "lucide-react";
+import "./ConfirmModal.css";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -14,8 +14,8 @@ export function ConfirmModal({
   isOpen,
   onConfirm,
   onCancel,
-  title = 'Confirm Action',
-  message = 'Are you sure you want to proceed?',
+  title = "Confirm Action",
+  message = "Are you sure you want to proceed?",
 }: ConfirmModalProps) {
   if (!isOpen) return null;
 

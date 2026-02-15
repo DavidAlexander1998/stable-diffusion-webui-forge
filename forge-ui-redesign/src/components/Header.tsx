@@ -1,10 +1,18 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import {  Sparkles, Settings, Cpu, Clock, Wifi, WifiOff, Folder } from 'lucide-react';
-import { useApiStatus } from '../hooks/useApiStatus';
-import { useSystemStatus } from '../hooks/useSystemStatus';
-import SettingsModal from './SettingsModal';
-import './Header.css';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Sparkles,
+  Settings,
+  Cpu,
+  Clock,
+  Wifi,
+  WifiOff,
+  Folder,
+} from "lucide-react";
+import { useApiStatus } from "../hooks/useApiStatus";
+import { useSystemStatus } from "../hooks/useSystemStatus";
+import SettingsModal from "./SettingsModal";
+import "./Header.css";
 
 interface HeaderProps {
   selectedModel: string;
@@ -13,13 +21,17 @@ interface HeaderProps {
 }
 
 const MODELS = [
-  'prefectPonyXL_v6.safetensors',
-  'sd_xl_base_1.0.safetensors',
-  'animagineXLV3_v30.safetensors',
-  'juggernautXL_v9.safetensors',
+  "prefectPonyXL_v6.safetensors",
+  "sd_xl_base_1.0.safetensors",
+  "animagineXLV3_v30.safetensors",
+  "juggernautXL_v9.safetensors",
 ];
 
-export default function Header({ selectedModel, onModelChange, onOpenPresets }: HeaderProps) {
+export default function Header({
+  selectedModel,
+  onModelChange,
+  onOpenPresets,
+}: HeaderProps) {
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const apiStatus = useApiStatus();
@@ -72,7 +84,7 @@ export default function Header({ selectedModel, onModelChange, onOpenPresets }: 
               {MODELS.map((model) => (
                 <button
                   key={model}
-                  className={`model-option ${model === selectedModel ? 'active' : ''}`}
+                  className={`model-option ${model === selectedModel ? "active" : ""}`}
                   onClick={() => {
                     onModelChange(model);
                     setShowModelSelector(false);
@@ -89,13 +101,15 @@ export default function Header({ selectedModel, onModelChange, onOpenPresets }: 
         <div className="header-status">
           {/* API Connection Status */}
           <div
-            className={`status-item ${apiStatus.isConnected ? 'status-connected' : 'status-disconnected'}`}
-            title={apiStatus.error || 'API Connected'}
+            className={`status-item ${apiStatus.isConnected ? "status-connected" : "status-disconnected"}`}
+            title={apiStatus.error || "API Connected"}
           >
             {apiStatus.isConnected ? <Wifi size={16} /> : <WifiOff size={16} />}
             <div className="status-details">
               <span className="status-label">API</span>
-              <span className="status-value">{apiStatus.isConnected ? 'Connected' : 'Offline'}</span>
+              <span className="status-value">
+                {apiStatus.isConnected ? "Connected" : "Offline"}
+              </span>
             </div>
           </div>
 
@@ -111,7 +125,10 @@ export default function Header({ selectedModel, onModelChange, onOpenPresets }: 
                   transition={{ duration: 1, delay: 0.5 }}
                 />
               </div>
-              <span className="status-value" title={`${systemStatus.gpuMemoryUsed.toFixed(1)}GB / ${systemStatus.gpuMemoryTotal.toFixed(1)}GB`}>
+              <span
+                className="status-value"
+                title={`${systemStatus.gpuMemoryUsed.toFixed(1)}GB / ${systemStatus.gpuMemoryTotal.toFixed(1)}GB`}
+              >
                 {systemStatus.gpuUsage}%
               </span>
             </div>
@@ -121,28 +138,37 @@ export default function Header({ selectedModel, onModelChange, onOpenPresets }: 
             <Clock size={16} />
             <div className="status-details">
               <span className="status-label">Queue</span>
-              <span className="status-value">{systemStatus.queueRunning} / {systemStatus.queuePending}</span>
+              <span className="status-value">
+                {systemStatus.queueRunning} / {systemStatus.queuePending}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Presets Button */}
-        <button 
-          className="header-settings" 
-          onClick={() => onOpenPresets?.()}  
+        <button
+          className="header-settings"
+          onClick={() => onOpenPresets?.()}
           title="Workflow Presets"
         >
           <Folder size={20} />
         </button>
 
         {/* Settings Button */}
-        <button className="header-settings" onClick={() => setShowSettings(true)} title="Settings">
+        <button
+          className="header-settings"
+          onClick={() => setShowSettings(true)}
+          title="Settings"
+        >
           <Settings size={20} />
         </button>
       </div>
 
       {/* Settings Modal */}
-      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
     </motion.header>
   );
 }

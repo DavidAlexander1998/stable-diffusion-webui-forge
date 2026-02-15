@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
-import { Plus, Trash2, Eye } from 'lucide-react';
-import type { ControlNetModel, ControlNetUnit } from '../types';
-import ImageUpload from './ImageUpload';
-import { extractBase64 } from '../utils/imageUtils';
-import { forgeAPI } from '../services/api';
-import './ControlNetPanel.css';
+import { useMemo, useState } from "react";
+import { Plus, Trash2, Eye } from "lucide-react";
+import type { ControlNetModel, ControlNetUnit } from "../types";
+import ImageUpload from "./ImageUpload";
+import { extractBase64 } from "../utils/imageUtils";
+import { forgeAPI } from "../services/api";
+import "./ControlNetPanel.css";
 
 interface ControlNetPanelProps {
   units: ControlNetUnit[];
@@ -14,21 +14,21 @@ interface ControlNetPanelProps {
 }
 
 const CONTROL_MODES = [
-  { value: 0, label: 'Balanced' },
-  { value: 1, label: 'Prompt Focus' },
-  { value: 2, label: 'ControlNet Focus' },
+  { value: 0, label: "Balanced" },
+  { value: 1, label: "Prompt Focus" },
+  { value: 2, label: "ControlNet Focus" },
 ];
 
 const RESIZE_MODES = [
-  { value: 0, label: 'Just Resize' },
-  { value: 1, label: 'Crop and Resize' },
-  { value: 2, label: 'Resize and Fill' },
+  { value: 0, label: "Just Resize" },
+  { value: 1, label: "Crop and Resize" },
+  { value: 2, label: "Resize and Fill" },
 ];
 
 const DEFAULT_UNIT = (): ControlNetUnit => ({
   enabled: true,
-  module: 'none',
-  model: 'None',
+  module: "none",
+  model: "None",
   weight: 1,
   guidance_start: 0,
   guidance_end: 1,
@@ -47,21 +47,30 @@ export default function ControlNetPanel({
   availableModules,
   onUnitsChange,
 }: ControlNetPanelProps) {
-  const [previewImages, setPreviewImages] = useState<Record<number, string>>({});
-  const [previewLoading, setPreviewLoading] = useState<Record<number, boolean>>({});
+  const [previewImages, setPreviewImages] = useState<Record<number, string>>(
+    {},
+  );
+  const [previewLoading, setPreviewLoading] = useState<Record<number, boolean>>(
+    {},
+  );
 
   const modelOptions = useMemo(
-    () => ['None', ...availableModels.map((model) => model.model_name)],
-    [availableModels]
+    () => ["None", ...availableModels.map((model) => model.model_name)],
+    [availableModels],
   );
 
   const moduleOptions = useMemo(
-    () => ['none', ...availableModules],
-    [availableModules]
+    () => ["none", ...availableModules],
+    [availableModules],
   );
 
-  const handleUnitChange = (index: number, updated: Partial<ControlNetUnit>) => {
-    const next = units.map((unit, i) => (i === index ? { ...unit, ...updated } : unit));
+  const handleUnitChange = (
+    index: number,
+    updated: Partial<ControlNetUnit>,
+  ) => {
+    const next = units.map((unit, i) =>
+      i === index ? { ...unit, ...updated } : unit,
+    );
     onUnitsChange(next);
   };
 
@@ -77,7 +86,7 @@ export default function ControlNetPanel({
 
   const handlePreview = async (index: number) => {
     const unit = units[index];
-    if (!unit?.input_image || !unit.module || unit.module === 'none') return;
+    if (!unit?.input_image || !unit.module || unit.module === "none") return;
 
     try {
       setPreviewLoading((prev) => ({ ...prev, [index]: true }));
@@ -86,7 +95,7 @@ export default function ControlNetPanel({
         [extractBase64(unit.input_image)],
         unit.processor_res,
         unit.threshold_a,
-        unit.threshold_b
+        unit.threshold_b,
       );
 
       if (response.images?.[0]) {
@@ -96,7 +105,7 @@ export default function ControlNetPanel({
         }));
       }
     } catch (error) {
-      console.error('Failed to preview ControlNet:', error);
+      console.error("Failed to preview ControlNet:", error);
     } finally {
       setPreviewLoading((prev) => ({ ...prev, [index]: false }));
     }
@@ -155,7 +164,9 @@ export default function ControlNetPanel({
               Module
               <select
                 value={unit.module}
-                onChange={(event) => handleUnitChange(index, { module: event.target.value })}
+                onChange={(event) =>
+                  handleUnitChange(index, { module: event.target.value })
+                }
               >
                 {moduleOptions.map((module) => (
                   <option key={module} value={module}>
@@ -169,7 +180,9 @@ export default function ControlNetPanel({
               Model
               <select
                 value={unit.model}
-                onChange={(event) => handleUnitChange(index, { model: event.target.value })}
+                onChange={(event) =>
+                  handleUnitChange(index, { model: event.target.value })
+                }
               >
                 {modelOptions.map((model) => (
                   <option key={model} value={model}>
@@ -183,8 +196,12 @@ export default function ControlNetPanel({
           <div className="controlnet-upload">
             <ImageUpload
               currentImage={unit.input_image}
-              onImageSelect={(base64) => handleUnitChange(index, { input_image: base64 })}
-              onRemove={() => handleUnitChange(index, { input_image: undefined })}
+              onImageSelect={(base64) =>
+                handleUnitChange(index, { input_image: base64 })
+              }
+              onRemove={() =>
+                handleUnitChange(index, { input_image: undefined })
+              }
               label="Upload control image"
             />
             <div className="controlnet-preview-actions">
@@ -192,10 +209,14 @@ export default function ControlNetPanel({
                 className="controlnet-preview-btn"
                 onClick={() => handlePreview(index)}
                 type="button"
-                disabled={!unit.input_image || unit.module === 'none' || previewLoading[index]}
+                disabled={
+                  !unit.input_image ||
+                  unit.module === "none" ||
+                  previewLoading[index]
+                }
               >
                 <Eye size={14} />
-                {previewLoading[index] ? 'Processing...' : 'Preview'}
+                {previewLoading[index] ? "Processing..." : "Preview"}
               </button>
               {previewImages[index] && (
                 <img src={previewImages[index]} alt="ControlNet preview" />
@@ -213,7 +234,9 @@ export default function ControlNetPanel({
                 step={0.05}
                 value={unit.weight}
                 onChange={(event) =>
-                  handleUnitChange(index, { weight: parseFloat(event.target.value) })
+                  handleUnitChange(index, {
+                    weight: parseFloat(event.target.value),
+                  })
                 }
               />
               <span>{unit.weight.toFixed(2)}</span>
@@ -260,7 +283,9 @@ export default function ControlNetPanel({
               <select
                 value={unit.control_mode}
                 onChange={(event) =>
-                  handleUnitChange(index, { control_mode: parseInt(event.target.value, 10) })
+                  handleUnitChange(index, {
+                    control_mode: parseInt(event.target.value, 10),
+                  })
                 }
               >
                 {CONTROL_MODES.map((mode) => (
@@ -276,7 +301,9 @@ export default function ControlNetPanel({
               <select
                 value={unit.resize_mode}
                 onChange={(event) =>
-                  handleUnitChange(index, { resize_mode: parseInt(event.target.value, 10) })
+                  handleUnitChange(index, {
+                    resize_mode: parseInt(event.target.value, 10),
+                  })
                 }
               >
                 {RESIZE_MODES.map((mode) => (
@@ -342,7 +369,9 @@ export default function ControlNetPanel({
                 type="checkbox"
                 checked={unit.pixel_perfect}
                 onChange={(event) =>
-                  handleUnitChange(index, { pixel_perfect: event.target.checked })
+                  handleUnitChange(index, {
+                    pixel_perfect: event.target.checked,
+                  })
                 }
               />
               <span>Pixel Perfect</span>

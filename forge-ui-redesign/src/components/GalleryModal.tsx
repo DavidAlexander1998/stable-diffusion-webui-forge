@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
   Download,
@@ -11,10 +11,10 @@ import {
   Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
-} from 'lucide-react';
-import { downloadImage } from '../utils/imageUtils';
-import { GenerationParams } from '../types';
-import './GalleryModal.css';
+} from "lucide-react";
+import { downloadImage } from "../utils/imageUtils";
+import { GenerationParams } from "../types";
+import "./GalleryModal.css";
 
 interface HistoryItem {
   id: number;
@@ -42,11 +42,11 @@ export default function GalleryModal({
   onToggleFavorite,
   selectedIndex = 0,
 }: GalleryModalProps) {
-  const [view, setView] = useState<'grid' | 'detail'>('grid');
-  const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterMode, setFilterMode] = useState<'all' | 'favorites'>('all');
-  const [sortBy, setSortBy] = useState<'date' | 'dimensions'>('date');
+  const [view, setView] = useState<"grid" | "detail">("grid");
+  const [layoutMode, setLayoutMode] = useState<"grid" | "list">("grid");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterMode, setFilterMode] = useState<"all" | "favorites">("all");
+  const [sortBy, setSortBy] = useState<"date" | "dimensions">("date");
   const [currentDetailIndex, setCurrentDetailIndex] = useState(selectedIndex);
 
   if (!isOpen) return null;
@@ -57,42 +57,49 @@ export default function GalleryModal({
   // Filter by search query
   if (searchQuery) {
     filteredHistory = filteredHistory.filter((item) =>
-      item.params?.prompt?.toLowerCase().includes(searchQuery.toLowerCase())
+      item.params?.prompt?.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }
 
   // Filter by favorites
-  if (filterMode === 'favorites') {
+  if (filterMode === "favorites") {
     filteredHistory = filteredHistory.filter((item) => item.isFavorite);
   }
 
   // Sort
-  if (sortBy === 'date') {
-    filteredHistory.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-  } else if (sortBy === 'dimensions') {
+  if (sortBy === "date") {
     filteredHistory.sort(
-      (a, b) => (b.params?.width || 0) * (b.params?.height || 0) - (a.params?.width || 0) * (a.params?.height || 0)
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime(),
+    );
+  } else if (sortBy === "dimensions") {
+    filteredHistory.sort(
+      (a, b) =>
+        (b.params?.width || 0) * (b.params?.height || 0) -
+        (a.params?.width || 0) * (a.params?.height || 0),
     );
   }
 
-  const currentItem = view === 'detail' ? filteredHistory[currentDetailIndex] : null;
+  const currentItem =
+    view === "detail" ? filteredHistory[currentDetailIndex] : null;
 
   const handlePrevious = () => {
     setCurrentDetailIndex((prev) => Math.max(0, prev - 1));
   };
 
   const handleNext = () => {
-    setCurrentDetailIndex((prev) => Math.min(filteredHistory.length - 1, prev + 1));
+    setCurrentDetailIndex((prev) =>
+      Math.min(filteredHistory.length - 1, prev + 1),
+    );
   };
 
   const handleDownload = (item: HistoryItem) => {
     const metadata = {
-      prompt: item.params?.prompt || '',
-      negative_prompt: item.params?.negative_prompt || '',
+      prompt: item.params?.prompt || "",
+      negative_prompt: item.params?.negative_prompt || "",
       seed: item.params?.seed || 0,
       steps: item.params?.steps || 0,
       cfg_scale: item.params?.cfg_scale || 0,
-      sampler_name: item.params?.sampler_name || '',
+      sampler_name: item.params?.sampler_name || "",
       width: item.params?.width || 0,
       height: item.params?.height || 0,
     };
@@ -113,23 +120,24 @@ export default function GalleryModal({
           <div className="gallery-header">
             <h2>
               <ImageIcon size={24} />
-              Gallery ({filteredHistory.length} {filteredHistory.length === 1 ? 'image' : 'images'})
+              Gallery ({filteredHistory.length}{" "}
+              {filteredHistory.length === 1 ? "image" : "images"})
             </h2>
 
             <div className="gallery-header-actions">
               {/* View Toggle */}
-              {view === 'grid' && (
+              {view === "grid" && (
                 <>
                   <button
-                    className={`view-toggle ${layoutMode === 'grid' ? 'active' : ''}`}
-                    onClick={() => setLayoutMode('grid')}
+                    className={`view-toggle ${layoutMode === "grid" ? "active" : ""}`}
+                    onClick={() => setLayoutMode("grid")}
                     title="Grid View"
                   >
                     <Grid size={18} />
                   </button>
                   <button
-                    className={`view-toggle ${layoutMode === 'list' ? 'active' : ''}`}
-                    onClick={() => setLayoutMode('list')}
+                    className={`view-toggle ${layoutMode === "list" ? "active" : ""}`}
+                    onClick={() => setLayoutMode("list")}
                     title="List View"
                   >
                     <List size={18} />
@@ -144,7 +152,7 @@ export default function GalleryModal({
           </div>
 
           {/* Controls */}
-          {view === 'grid' && (
+          {view === "grid" && (
             <div className="gallery-controls">
               <div className="search-box">
                 <Search size={16} />
@@ -158,14 +166,14 @@ export default function GalleryModal({
 
               <div className="gallery-filters">
                 <button
-                  className={`filter-btn ${filterMode === 'all' ? 'active' : ''}`}
-                  onClick={() => setFilterMode('all')}
+                  className={`filter-btn ${filterMode === "all" ? "active" : ""}`}
+                  onClick={() => setFilterMode("all")}
                 >
                   All
                 </button>
                 <button
-                  className={`filter-btn ${filterMode === 'favorites' ? 'active' : ''}`}
-                  onClick={() => setFilterMode('favorites')}
+                  className={`filter-btn ${filterMode === "favorites" ? "active" : ""}`}
+                  onClick={() => setFilterMode("favorites")}
                 >
                   <Star size={14} />
                   Favorites
@@ -175,7 +183,9 @@ export default function GalleryModal({
               <select
                 className="gallery-sort"
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'date' | 'dimensions')}
+                onChange={(e) =>
+                  setSortBy(e.target.value as "date" | "dimensions")
+                }
               >
                 <option value="date">Sort by Date</option>
                 <option value="dimensions">Sort by Size</option>
@@ -185,7 +195,7 @@ export default function GalleryModal({
 
           {/* Content */}
           <div className="gallery-content">
-            {view === 'grid' && (
+            {view === "grid" && (
               <div className={`gallery-${layoutMode}`}>
                 {filteredHistory.map((item, index) => (
                   <div
@@ -193,13 +203,15 @@ export default function GalleryModal({
                     className="gallery-item"
                     onClick={() => {
                       setCurrentDetailIndex(index);
-                      setView('detail');
+                      setView("detail");
                     }}
                   >
                     <img src={item.image} alt="Generated" />
                     <div className="gallery-item-overlay">
                       <div className="gallery-item-info">
-                        <span>{item.params?.width}×{item.params?.height}</span>
+                        <span>
+                          {item.params?.width}×{item.params?.height}
+                        </span>
                         <span>{item.params?.steps} steps</span>
                       </div>
                       <div className="gallery-item-actions">
@@ -210,7 +222,10 @@ export default function GalleryModal({
                             onToggleFavorite?.(item.id);
                           }}
                         >
-                          <Star size={16} fill={item.isFavorite ? 'currentColor' : 'none'} />
+                          <Star
+                            size={16}
+                            fill={item.isFavorite ? "currentColor" : "none"}
+                          />
                         </button>
                         <button
                           className="gallery-item-action"
@@ -226,7 +241,7 @@ export default function GalleryModal({
                             className="gallery-item-action danger"
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (confirm('Delete this image?')) {
+                              if (confirm("Delete this image?")) {
                                 onDelete(item.id);
                               }
                             }}
@@ -241,9 +256,13 @@ export default function GalleryModal({
               </div>
             )}
 
-            {view === 'detail' && currentItem && (
+            {view === "detail" && currentItem && (
               <div className="gallery-detail">
-                <button className="nav-btn prev" onClick={handlePrevious} disabled={currentDetailIndex === 0}>
+                <button
+                  className="nav-btn prev"
+                  onClick={handlePrevious}
+                  disabled={currentDetailIndex === 0}
+                >
                   <ChevronLeft size={24} />
                 </button>
 
@@ -260,25 +279,36 @@ export default function GalleryModal({
                           className="detail-action-btn"
                           onClick={() => onToggleFavorite?.(currentItem.id)}
                         >
-                          <Star size={18} fill={currentItem.isFavorite ? 'currentColor' : 'none'} />
+                          <Star
+                            size={18}
+                            fill={
+                              currentItem.isFavorite ? "currentColor" : "none"
+                            }
+                          />
                         </button>
-                        <button className="detail-action-btn" onClick={() => handleDownload(currentItem)}>
+                        <button
+                          className="detail-action-btn"
+                          onClick={() => handleDownload(currentItem)}
+                        >
                           <Download size={18} />
                         </button>
                         {onDelete && (
                           <button
                             className="detail-action-btn danger"
                             onClick={() => {
-                              if (confirm('Delete this image?')) {
+                              if (confirm("Delete this image?")) {
                                 onDelete(currentItem.id);
-                                setView('grid');
+                                setView("grid");
                               }
                             }}
                           >
                             <Trash2 size={18} />
                           </button>
                         )}
-                        <button className="detail-action-btn" onClick={() => setView('grid')}>
+                        <button
+                          className="detail-action-btn"
+                          onClick={() => setView("grid")}
+                        >
                           <Grid size={18} />
                         </button>
                       </div>
@@ -287,20 +317,27 @@ export default function GalleryModal({
                     <div className="detail-params">
                       <div className="param-group">
                         <label>Prompt</label>
-                        <p className="prompt-text">{currentItem.params?.prompt || 'N/A'}</p>
+                        <p className="prompt-text">
+                          {currentItem.params?.prompt || "N/A"}
+                        </p>
                       </div>
 
                       {currentItem.params?.negative_prompt && (
                         <div className="param-group">
                           <label>Negative Prompt</label>
-                          <p className="prompt-text">{currentItem.params.negative_prompt}</p>
+                          <p className="prompt-text">
+                            {currentItem.params.negative_prompt}
+                          </p>
                         </div>
                       )}
 
                       <div className="param-grid">
                         <div className="param-item">
                           <label>Dimensions</label>
-                          <span>{currentItem.params?.width}×{currentItem.params?.height}</span>
+                          <span>
+                            {currentItem.params?.width}×
+                            {currentItem.params?.height}
+                          </span>
                         </div>
                         <div className="param-item">
                           <label>Steps</label>
@@ -320,7 +357,9 @@ export default function GalleryModal({
                         </div>
                         <div className="param-item">
                           <label>Model</label>
-                          <span>{currentItem.params?.sd_model_checkpoint || 'N/A'}</span>
+                          <span>
+                            {currentItem.params?.sd_model_checkpoint || "N/A"}
+                          </span>
                         </div>
                       </div>
 
@@ -348,7 +387,11 @@ export default function GalleryModal({
               <div className="empty-gallery">
                 <ImageIcon size={48} />
                 <p>No images found</p>
-                {searchQuery && <button onClick={() => setSearchQuery('')}>Clear Search</button>}
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery("")}>
+                    Clear Search
+                  </button>
+                )}
               </div>
             )}
           </div>

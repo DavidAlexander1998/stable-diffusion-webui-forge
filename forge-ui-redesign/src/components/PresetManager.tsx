@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Save,
   Folder,
@@ -11,10 +11,10 @@ import {
   Search,
   Copy,
   Check,
-} from 'lucide-react';
-import { usePresets } from '../hooks/usePresets';
-import type { GenerationParams } from '../types';
-import './PresetManager.css';
+} from "lucide-react";
+import { usePresets } from "../hooks/usePresets";
+import type { GenerationParams } from "../types";
+import "./PresetManager.css";
 
 interface PresetManagerProps {
   isOpen: boolean;
@@ -43,28 +43,28 @@ export default function PresetManager({
     searchPresets,
   } = usePresets();
 
-  const [view, setView] = useState<'browse' | 'save'>('browse');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [view, setView] = useState<"browse" | "save">("browse");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [saveForm, setSaveForm] = useState({
-    name: '',
-    description: '',
-    category: 'Custom',
+    name: "",
+    description: "",
+    category: "Custom",
   });
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const categories = ['All', ...getCategories()];
+  const categories = ["All", ...getCategories()];
   const displayedPresets = searchQuery
     ? searchPresets(searchQuery)
-    : selectedCategory === 'All'
-    ? presets
-    : presets.filter((p) => p.category === selectedCategory);
+    : selectedCategory === "All"
+      ? presets
+      : presets.filter((p) => p.category === selectedCategory);
 
   const handleSavePreset = () => {
     if (!saveForm.name.trim()) {
-      alert('Please enter a preset name');
+      alert("Please enter a preset name");
       return;
     }
 
@@ -95,33 +95,33 @@ export default function PresetManager({
       saveForm.description,
       saveForm.category,
       presetParams,
-      lastGeneratedImage
+      lastGeneratedImage,
     );
 
-    setSaveForm({ name: '', description: '', category: 'Custom' });
-    setView('browse');
+    setSaveForm({ name: "", description: "", category: "Custom" });
+    setView("browse");
   };
 
   const handleExportPreset = (id: string) => {
     try {
       const json = exportPreset(id);
-      const blob = new Blob([json], { type: 'application/json' });
+      const blob = new Blob([json], { type: "application/json" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `preset-${id}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Failed to export preset:', error);
-      alert('Failed to export preset');
+      console.error("Failed to export preset:", error);
+      alert("Failed to export preset");
     }
   };
 
   const handleImportPreset = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
@@ -129,10 +129,10 @@ export default function PresetManager({
       try {
         const text = await file.text();
         importPreset(text);
-        alert('Preset imported successfully!');
+        alert("Preset imported successfully!");
       } catch (error) {
-        console.error('Failed to import preset:', error);
-        alert('Failed to import preset. Please check the file format.');
+        console.error("Failed to import preset:", error);
+        alert("Failed to import preset. Please check the file format.");
       }
     };
     input.click();
@@ -141,16 +141,16 @@ export default function PresetManager({
   const handleExportAll = () => {
     try {
       const json = exportAllPresets();
-      const blob = new Blob([json], { type: 'application/json' });
+      const blob = new Blob([json], { type: "application/json" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `forge-presets-${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Failed to export presets:', error);
-      alert('Failed to export presets');
+      console.error("Failed to export presets:", error);
+      alert("Failed to export presets");
     }
   };
 
@@ -161,7 +161,7 @@ export default function PresetManager({
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     } catch (error) {
-      console.error('Failed to copy preset:', error);
+      console.error("Failed to copy preset:", error);
     }
   };
 
@@ -189,14 +189,14 @@ export default function PresetManager({
           {/* Tabs */}
           <div className="preset-tabs">
             <button
-              className={`preset-tab ${view === 'browse' ? 'active' : ''}`}
-              onClick={() => setView('browse')}
+              className={`preset-tab ${view === "browse" ? "active" : ""}`}
+              onClick={() => setView("browse")}
             >
               Browse Presets
             </button>
             <button
-              className={`preset-tab ${view === 'save' ? 'active' : ''}`}
-              onClick={() => setView('save')}
+              className={`preset-tab ${view === "save" ? "active" : ""}`}
+              onClick={() => setView("save")}
             >
               <Save size={16} />
               Save Current
@@ -204,7 +204,7 @@ export default function PresetManager({
           </div>
 
           {/* Browse View */}
-          {view === 'browse' && (
+          {view === "browse" && (
             <div className="preset-content">
               {/* Search and Filter */}
               <div className="preset-filters">
@@ -223,7 +223,7 @@ export default function PresetManager({
                     <button
                       key={cat}
                       className={`category-pill ${
-                        selectedCategory === cat ? 'active' : ''
+                        selectedCategory === cat ? "active" : ""
                       }`}
                       onClick={() => setSelectedCategory(cat)}
                     >
@@ -260,11 +260,14 @@ export default function PresetManager({
                         <h3>{preset.name}</h3>
                         <button
                           className={`favorite-btn ${
-                            preset.isFavorite ? 'active' : ''
+                            preset.isFavorite ? "active" : ""
                           }`}
                           onClick={() => toggleFavorite(preset.id)}
                         >
-                          <Star size={14} fill={preset.isFavorite ? 'currentColor' : 'none'} />
+                          <Star
+                            size={14}
+                            fill={preset.isFavorite ? "currentColor" : "none"}
+                          />
                         </button>
                       </div>
 
@@ -272,7 +275,9 @@ export default function PresetManager({
                       <span className="preset-category">{preset.category}</span>
 
                       <div className="preset-params">
-                        <span>{preset.params.width}×{preset.params.height}</span>
+                        <span>
+                          {preset.params.width}×{preset.params.height}
+                        </span>
                         <span>{preset.params.steps} steps</span>
                         <span>CFG {preset.params.cfg_scale}</span>
                       </div>
@@ -306,11 +311,11 @@ export default function PresetManager({
                       >
                         <Download size={14} />
                       </button>
-                      {!preset.id.startsWith('default-') && (
+                      {!preset.id.startsWith("default-") && (
                         <button
                           className="card-action-btn danger"
                           onClick={() => {
-                            if (confirm('Delete this preset?')) {
+                            if (confirm("Delete this preset?")) {
                               deletePreset(preset.id);
                             }
                           }}
@@ -334,7 +339,7 @@ export default function PresetManager({
           )}
 
           {/* Save View */}
-          {view === 'save' && (
+          {view === "save" && (
             <div className="preset-content">
               <div className="save-form">
                 <div className="form-group">
@@ -390,7 +395,10 @@ export default function PresetManager({
                 )}
 
                 <div className="form-actions">
-                  <button className="cancel-btn" onClick={() => setView('browse')}>
+                  <button
+                    className="cancel-btn"
+                    onClick={() => setView("browse")}
+                  >
                     Cancel
                   </button>
                   <button className="save-btn" onClick={handleSavePreset}>
