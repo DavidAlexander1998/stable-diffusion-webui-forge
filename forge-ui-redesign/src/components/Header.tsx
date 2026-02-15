@@ -8,10 +8,12 @@ import {
   Wifi,
   WifiOff,
   Folder,
+  Package,
 } from "lucide-react";
 import { useApiStatus } from "../hooks/useApiStatus";
 import { useSystemStatus } from "../hooks/useSystemStatus";
 import SettingsModal from "./SettingsModal";
+import ModelManager from "./ModelManager";
 import "./Header.css";
 
 interface HeaderProps {
@@ -32,6 +34,7 @@ export default function Header({
   onModelChange,
   onOpenPresets,
 }: HeaderProps) {
+  const [showModelManager, setShowModelManager] = useState(false);
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const apiStatus = useApiStatus();
@@ -153,6 +156,14 @@ export default function Header({
         >
           <Folder size={20} />
         </button>
+Model Manager Button */}
+        <button
+          className="header-settings"
+          onClick={() => setShowModelManager(true)}
+          title="Model Manager"
+        >
+          <Package size={20} />
+        </button>
 
         {/* Settings Button */}
         <button
@@ -162,6 +173,15 @@ export default function Header({
         >
           <Settings size={20} />
         </button>
+      </div>
+
+      {/* Model Manager Modal */}
+      <ModelManager
+        isOpen={showModelManager}
+        onClose={() => setShowModelManager(false)}
+        selectedModel={selectedModel}
+        onModelSelect={onModelChange}
+      /utton>
       </div>
 
       {/* Settings Modal */}

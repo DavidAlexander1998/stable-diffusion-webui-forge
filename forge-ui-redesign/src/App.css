@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
   /* Color System - Black & Red Aggressive */
@@ -10,9 +10,14 @@
 
   /* Red Gradients */
   --gradient-primary: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
-  --gradient-secondary: linear-gradient(180deg, rgba(255, 0, 0, 0.1) 0%, rgba(204, 0, 0, 0.05) 100%);
-  --gradient-mesh: radial-gradient(at 15% 25%, rgba(255, 0, 0, 0.08) 0%, transparent 50%),
-                   radial-gradient(at 85% 75%, rgba(204, 0, 0, 0.05) 0%, transparent 50%);
+  --gradient-secondary: linear-gradient(
+    180deg,
+    rgba(255, 0, 0, 0.1) 0%,
+    rgba(204, 0, 0, 0.05) 100%
+  );
+  --gradient-mesh:
+    radial-gradient(at 15% 25%, rgba(255, 0, 0, 0.08) 0%, transparent 50%),
+    radial-gradient(at 85% 75%, rgba(204, 0, 0, 0.05) 0%, transparent 50%);
 
   /* Accents - Red spectrum */
   --accent-primary: #ff0000;
@@ -45,8 +50,8 @@
   --shadow-glow: 0 0 32px var(--accent-glow);
 
   /* Typography - Technical/Industrial */
-  --font-display: 'JetBrains Mono', monospace;
-  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "JetBrains Mono", monospace;
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -109,16 +114,37 @@ body {
 }
 
 @keyframes grain {
-  0%, 100% { transform: translate(0, 0); }
-  10% { transform: translate(-5%, -10%); }
-  20% { transform: translate(-15%, 5%); }
-  30% { transform: translate(7%, -25%); }
-  40% { transform: translate(-5%, 25%); }
-  50% { transform: translate(-15%, 10%); }
-  60% { transform: translate(15%, 0%); }
-  70% { transform: translate(0%, 15%); }
-  80% { transform: translate(3%, 35%); }
-  90% { transform: translate(-10%, 10%); }
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  10% {
+    transform: translate(-5%, -10%);
+  }
+  20% {
+    transform: translate(-15%, 5%);
+  }
+  30% {
+    transform: translate(7%, -25%);
+  }
+  40% {
+    transform: translate(-5%, 25%);
+  }
+  50% {
+    transform: translate(-15%, 10%);
+  }
+  60% {
+    transform: translate(15%, 0%);
+  }
+  70% {
+    transform: translate(0%, 15%);
+  }
+  80% {
+    transform: translate(3%, 35%);
+  }
+  90% {
+    transform: translate(-10%, 10%);
+  }
 }
 
 /* Gradient Mesh Background */
@@ -135,7 +161,8 @@ body {
 }
 
 @keyframes mesh-flow {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
     background-size: 200% 200%;
   }
@@ -214,13 +241,18 @@ body {
 }
 
 .card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
 }
 
 /* Button Styles */
@@ -238,7 +270,7 @@ body {
 }
 
 .btn::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -247,7 +279,9 @@ body {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   transform: translate(-50%, -50%);
-  transition: width 0.3s, height 0.3s;
+  transition:
+    width 0.3s,
+    height 0.3s;
 }
 
 .btn:hover::before {
@@ -316,4 +350,68 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 0, 0, 0.6);
+}
+
+/* Drag and Drop Overlay */
+.drag-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.drag-overlay-content {
+  text-align: center;
+  color: var(--text-primary);
+  transform: scale(1);
+  animation: dragPulse 2s ease-in-out infinite;
+}
+
+.drag-overlay-icon {
+  font-size: 5rem;
+  margin-bottom: var(--space-lg);
+  animation: dragFloat 3s ease-in-out infinite;
+}
+
+.drag-overlay-content h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 var(--space-md);
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.drag-overlay-content p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: var(--space-sm) 0;
+}
+
+@keyframes dragPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes dragFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }

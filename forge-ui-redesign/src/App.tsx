@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import WorkflowSidebar from "./components/WorkflowSidebar";
 import MainCanvas from "./components/MainCanvas";
@@ -7,16 +7,23 @@ import Header from "./components/Header";
 import ErrorModal from "./components/ErrorModal";
 import { ConfirmModal } from "./components/ConfirmModal";
 import PresetManager from "./components/PresetManager";
+import ShortcutsHelp from "./components/ShortcutsHelp";
+import GalleryModal from "./components/GalleryModal";
+import NotificationContainer from "./components/Notification";
 import { WorkflowMode, ControlMode, GenerationParams } from "./types";
 import { useGeneration } from "./hooks/useGeneration";
 import { useProgress } from "./hooks/useProgress";
 import { useSettings } from "./hooks/useSettings";
+import { useNotifications } from "./hooks/useNotifications";
+import {
+  useKeyboardShortcuts,
+  type KeyboardShortcut,
+} from "./hooks/useKeyboardShortcuts";
 import {
   downloadImage,
   ImageMetadata,
   extractBase64,
 } from "./utils/imageUtils";
-import { extractBase64 } from "./utils/imageUtils";
 import { forgeAPI } from "./services/api";
 import type { BatchItem, BatchOptions } from "./components/BatchPanel";
 import type { ExtrasOptions } from "./components/ExtrasPanel";
@@ -32,6 +39,8 @@ function App() {
   const [pendingGenerate, setPendingGenerate] = useState(false);
   const [presetManagerOpen, setPresetManagerOpen] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string>("");
 
   // Initialize params with proper API field names
@@ -128,10 +137,19 @@ function App() {
     stopPolling,
   } = useProgress();
 
+  const {
+    notifications,
+    removeNotification,
+    success: notifySuccess,
+    error: notifyError,
+    info: notifyInfo,
+  } = useNotifications();
+
   // Handle generation errors
   useEffect(() => {
     if (genError) {
       console.error("Generation error:", genError);
+      notifyError("Generation Failed", genError);
       setErrorModal({
         isOpen: true,
         error: {
@@ -146,7 +164,7 @@ function App() {
       });
       stopPolling();
     }
-  }, [genError, stopPolling]);
+  }, [genError, stopPolling, notifyError]);
 
   // Auto-stop polling when generation completes
   useEffect(() => {
@@ -155,56 +173,241 @@ function App() {
     }
   }, [isGenerating, progressActive, stopPolling]);
 
+  // Define keyboard shortcuts
+  const keyboardShortcuts = useMemo<KeyboardShortcut[]>(
+    () => [
+      // Generation shortcuts
+      {
+        key: "Enter",
+        ctrl: true,
+        description: "Start generation",
+        category: "generation",
+        handler: () => {
+          if (
+            workflowMode === "batch" &&
+            !batchRunning &&
+            batchItems.length > 0
+          ) {
+            handleBatchRun();
+          } else if (
+            workflowMode === "extras" &&
+            !extrasRunning &&
+            extrasImage
+          ) {
+            handleExtrasRun();
+          } else if (!isGenerating && params.prompt.trim()) {
+            handleGenerate();
+          }
+        },
+      },
+      {
+        key: "i",
+        ctrl: true,
+        description: "Interrupt generation",
+        category: "generation",
+        handler: () => {
+          interrupt();
+        },
+      },
+      // Image actions
+      {
+        key: "s",
+        ctrl: true,
+        description: "Save current image",
+        category: "image",
+        handler: () => {
+          if (history.length > 0) {
+            downloadImage(history[0].image, history[0].params);
+          }
+        },
+      },
+      {
+        key: "d",
+        ctrl: true,
+        description: "Download current image",
+        category: "image",
+        handler: () => {
+          if (history.length > 0) {
+            downloadImage(history[0].image, history[0].params);
+          }
+        },
+      },
+      // Presets
+      {
+        key: "s",
+        ctrl: true,
+        shift: true,
+        description: "Save preset",
+        category: "presets",
+        handler: () => {
+          setPresetManagerOpen(true);
+        },
+      },
+      {
+        key: "l",
+        ctrl: true,
+        shift: true,
+        description: "Load preset",
+        category: "presets",
+        handler: () => {
+          setPresetManagerOpen(true);
+        },
+      },
+      // UI
+      {
+        key: "Escape",
+        description: "Close modals",
+        category: "ui",
+        handler: () => {
+          if (errorModal.isOpen) {
+            setErrorModal((prev) => ({ ...prev, isOpen: false }));
+          } else if (presetManagerOpen) {
+            setPresetManagerOpen(false);
+          } else if (galleryOpen) {
+            setGalleryOpen(false);
+          } else if (shortcutsHelpOpen) {
+            setShortcutsHelpOpen(false);
+          }
+        },
+      },
+      {
+        key: "?",
+        description: "Show keyboard shortcuts",
+        category: "ui",
+        handler: () => {
+          setShortcutsHelpOpen(true);
+        },
+      },
+      {
+        key: "/",
+        ctrl: true,
+        description: "Show keyboard shortcuts",
+        category: "ui",
+        handler: () => {
+          setShortcutsHelpOpen(true);
+        },
+      },
+      // Navigation
+      {
+        key: "ArrowLeft",
+        description: "Previous image in history",
+        category: "navigation",
+        handler: () => {
+          // TODO: Implement navigation
+        },
+      },
+      {
+        key: "ArrowRight",
+        description: "Next image in history",
+        category: "navigation",
+        handler: () => {
+          // TODO: Implement navigation
+        },
+      },
+    ],
+    [
+      workflowMode,
+      batchRunning,
+      batchItems.length,
+      extrasRunning,
+      extrasImage,
+      isGenerating,
+      params.prompt,
+      errorModal.isOpen,
+      presetManagerOpen,
+      galleryOpen,
+      shortcutsHelpOpen,
+      history,
+      interrupt,
+    ],
+  );
+
+  // Apply keyboard shortcuts
+  useKeyboardShortcuts({
+    enabled: true,
+    shortcuts: keyboardShortcuts,
+  });
+
+  // Global drag-and-drop handler
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        if (errorModal.isOpen) {
-          setErrorModal((prev) => ({ ...prev, isOpen: false }));
-        }
-        return;
-      }
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDraggingFile(true);
+    };
 
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "i") {
-        event.preventDefault();
-        interrupt();
-        return;
-      }
-
-      if (event.key !== "Enter" || (!event.ctrlKey && !event.metaKey)) return;
-      event.preventDefault();
-
-      if (workflowMode === "batch") {
-        if (!batchRunning && batchItems.length > 0) {
-          handleBatchRun();
-        }
-        return;
-      }
-
-      if (workflowMode === "extras") {
-        if (!extrasRunning && extrasImage) {
-          handleExtrasRun();
-        }
-        return;
-      }
-
-      if (!isGenerating && params.prompt.trim()) {
-        handleGenerate();
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Only set to false if we're leaving the window
+      if (e.target === document.body || e.target === document.documentElement) {
+        setIsDraggingFile(false);
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    workflowMode,
-    batchRunning,
-    batchItems.length,
-    extrasRunning,
-    extrasImage,
-    isGenerating,
-    params.prompt,
-    errorModal.isOpen,
-    interrupt,
-  ]);
+    const handleDrop = async (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDraggingFile(false);
+
+      const files = e.dataTransfer?.files;
+      if (!files || files.length === 0) return;
+
+      const file = files[0];
+
+      // Handle JSON files (presets)
+      if (file.type === "application/json" || file.name.endsWith(".json")) {
+        try {
+          const text = await file.text();
+          const presetData = JSON.parse(text);
+
+          // Check if it's a preset
+          if (presetData.params) {
+            handleLoadPreset(presetData);
+            return;
+          }
+        } catch (err) {
+          console.error("Failed to parse JSON:", err);
+        }
+      }
+
+      // Handle image files
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const base64 = event.target?.result as string;
+          setUploadedImage(base64);
+
+          // Switch to img2img mode
+          if (workflowMode === "txt2img") {
+            setWorkflowMode("img2img");
+          }
+
+          // Try to extract metadata from PNG
+          if (file.type === "image/png") {
+            try {
+              // Extract metadata and load params if available
+              // This would require a more sophisticated PNG metadata parser
+              console.log("PNG metadata extraction not yet implemented");
+            } catch (err) {
+              console.error("Failed to extract metadata:", err);
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    document.addEventListener("dragover", handleDragOver);
+    document.addEventListener("dragleave", handleDragLeave);
+    document.addEventListener("drop", handleDrop);
+
+    return () => {
+      document.removeEventListener("dragover", handleDragOver);
+      document.removeEventListener("dragleave", handleDragLeave);
+      document.removeEventListener("drop", handleDrop);
+    };
+  }, [workflowMode]);
 
   const buildPromptWithLoras = (baseParams: GenerationParams) => {
     let finalPrompt = baseParams.prompt;
@@ -318,6 +521,12 @@ function App() {
         // Set as current result
         setLastResult(imageData);
 
+        // Notify success
+        notifySuccess(
+          "Generation Complete",
+          "Your image has been generated successfully",
+        );
+
         // Auto-download if setting is enabled
         if (settings.autoSaveImages) {
           const metadata: ImageMetadata = {
@@ -337,6 +546,7 @@ function App() {
             quality: settings.imageQuality / 100,
             embedMetadata: settings.embedMetadata,
           });
+          notifyInfo("Image Saved", "Image downloaded automatically");
           console.log("📥 Auto-saved image");
         }
 
@@ -716,6 +926,36 @@ function App() {
         onDelete={handleDeleteHistoryItem}
         onToggleFavorite={handleToggleFavorite}
       />
+
+      {/* Keyboard Shortcuts Help */}
+      <ShortcutsHelp
+        isOpen={shortcutsHelpOpen}
+        onClose={() => setShortcutsHelpOpen(false)}
+        shortcuts={keyboardShortcuts}
+      />
+
+      {/* Notification Toasts */}
+      <NotificationContainer
+        notifications={notifications}
+        onDismiss={removeNotification}
+      />
+
+      {/* Drag and Drop Overlay */}
+      {isDraggingFile && (
+        <motion.div
+          className="drag-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <div className="drag-overlay-content">
+            <div className="drag-overlay-icon">📁</div>
+            <h2>Drop to Upload</h2>
+            <p>Drop images to switch to img2img mode</p>
+            <p>Drop JSON files to load presets</p>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }
