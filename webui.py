@@ -43,6 +43,7 @@ def create_api(app):
     from modules.call_queue import queue_lock
 
     api = Api(app, queue_lock)
+    app.include_router(api.router)
     return api
 
 

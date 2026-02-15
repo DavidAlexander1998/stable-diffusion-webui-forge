@@ -10,6 +10,8 @@ import importlib.metadata
 import platform
 import json
 import shlex
+import threading
+import time
 from functools import lru_cache
 from typing import NamedTuple
 from pathlib import Path
@@ -542,6 +544,7 @@ def configure_forge_reference_checkout(a1111_home: Path):
 
 
 def start():
+    _start_console_restart_listener()
     print(f"Launching {'API server' if '--nowebui' in sys.argv else 'Web UI'} with arguments: {shlex.join(sys.argv[1:])}")
     import webui
     if '--nowebui' in sys.argv:
@@ -553,6 +556,41 @@ def start():
 
     main_thread.loop()
     return
+
+
+def _start_console_restart_listener() -> None:
+    if os.environ.get("SD_WEBUI_CONSOLE_RESTART") != "1":
+        return
+
+    if not os.environ.get("SD_WEBUI_RESTART"):
+        return
+
+    if not sys.stdin or not sys.stdin.isatty():
+        return
+
+    if platform.system() != "Windows":
+        return
+
+    try:
+        import msvcrt
+    except Exception:
+        return
+
+    from modules import restart
+
+    def _listen():
+        print("Console hot reload enabled. Press R to restart.")
+        while True:
+            if msvcrt.kbhit():
+                key = msvcrt.getwch()
+                if key in ("r", "R"):
+                    print("Restart requested from console.")
+                    restart.restart_program()
+                    return
+            time.sleep(0.1)
+
+    thread = threading.Thread(target=_listen, name="console-restart-listener", daemon=True)
+    thread.start()
 
 
 def dump_sysinfo():

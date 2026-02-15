@@ -1,0 +1,135 @@
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import {  Sparkles, Settings, Cpu, Clock, Wifi, WifiOff } from 'lucide-react';
+import { useApiStatus } from '../hooks/useApiStatus';
+import SettingsModal from './SettingsModal';
+import './Header.css';
+
+interface HeaderProps {
+  selectedModel: string;
+  onModelChange: (model: string) => void;
+}
+
+const MODELS = [
+  'prefectPonyXL_v6.safetensors',
+  'sd_xl_base_1.0.safetensors',
+  'animagineXLV3_v30.safetensors',
+  'juggernautXL_v9.safetensors',
+];
+
+export default function Header({ selectedModel, onModelChange }: HeaderProps) {
+  const [showModelSelector, setShowModelSelector] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [gpuUsage] = useState(65);
+  const apiStatus = useApiStatus();
+
+  return (
+    <motion.header
+      className="header card"
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="header-content">
+        {/* Logo & Brand */}
+        <div className="header-brand">
+          <div className="logo-container">
+            <Sparkles className="logo-icon" />
+          </div>
+          <div>
+            <h1 className="brand-title">FORGE</h1>
+            <p className="brand-subtitle">Cinematic Studio</p>
+          </div>
+        </div>
+
+        {/* Model Selector */}
+        <div className="model-selector-container">
+          <button
+            className="model-selector"
+            onClick={() => setShowModelSelector(!showModelSelector)}
+          >
+            <div className="model-info">
+              <span className="model-label">Active Model</span>
+              <span className="model-name">{selectedModel}</span>
+            </div>
+            <motion.div
+              animate={{ rotate: showModelSelector ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              ▼
+            </motion.div>
+          </button>
+
+          {showModelSelector && (
+            <motion.div
+              className="model-dropdown"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              {MODELS.map((model) => (
+                <button
+                  key={model}
+                  className={`model-option ${model === selectedModel ? 'active' : ''}`}
+                  onClick={() => {
+                    onModelChange(model);
+                    setShowModelSelector(false);
+                  }}
+                >
+                  {model}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </div>
+
+        {/* Status Indicators */}
+        <div className="header-status">
+          {/* API Connection Status */}
+          <div
+            className={`status-item ${apiStatus.isConnected ? 'status-connected' : 'status-disconnected'}`}
+            title={apiStatus.error || 'API Connected'}
+          >
+            {apiStatus.isConnected ? <Wifi size={16} /> : <WifiOff size={16} />}
+            <div className="status-details">
+              <span className="status-label">API</span>
+              <span className="status-value">{apiStatus.isConnected ? 'Connected' : 'Offline'}</span>
+            </div>
+          </div>
+
+          <div className="status-item">
+            <Cpu size={16} />
+            <div className="status-details">
+              <span className="status-label">GPU</span>
+              <div className="gpu-bar">
+                <motion.div
+                  className="gpu-fill"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${gpuUsage}%` }}
+                  transition={{ duration: 1, delay: 0.5 }}
+                />
+              </div>
+              <span className="status-value">{gpuUsage}%</span>
+            </div>
+          </div>
+
+          <div className="status-item">
+            <Clock size={16} />
+            <div className="status-details">
+              <span className="status-label">Queue</span>
+              <span className="status-value">0 / 0</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Settings Button */}
+        <button className="header-settings" onClick={() => setShowSettings(true)}>
+          <Settings size={20} />
+        </button>
+      </div>
+
+      {/* Settings Modal */}
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+    </motion.header>
+  );
+}
