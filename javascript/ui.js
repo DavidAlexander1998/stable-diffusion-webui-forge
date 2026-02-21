@@ -151,16 +151,55 @@ function showRestoreProgressButton(tabname, show) {
     button.style.setProperty('display', show ? 'flex' : 'none', 'important');
 }
 
+function galleryHeadImageSrc(galleryId) {
+    return gradioApp().querySelector(`#${galleryId} .thumbnail-item > img`)?.src ?? null;
+}
+
+function recoverGalleryIfUnchanged(tabname, id, galleryId, previousHeadSrc) {
+    var storageKey = tabname + "_task_id";
+
+    if (opts.do_not_show_images) {
+        localRemove(storageKey);
+        return;
+    }
+
+    var currentHeadSrc = galleryHeadImageSrc(galleryId);
+    var galleryChanged = currentHeadSrc && currentHeadSrc !== previousHeadSrc;
+    if (galleryChanged) {
+        localRemove(storageKey);
+        return;
+    }
+
+    var restoreButton = gradioApp().getElementById(tabname + "_restore_progress");
+    if (!restoreButton) {
+        localRemove(storageKey);
+        return;
+    }
+
+    localSet(storageKey, id);
+
+    setTimeout(function() {
+        restoreButton.click();
+
+        setTimeout(function() {
+            if (localGet(storageKey) === id) {
+                localRemove(storageKey);
+            }
+        }, Math.max(opts.live_preview_refresh_period || 500, 500) * 4);
+    }, 50);
+}
+
 function submit() {
     showSubmitButtons('txt2img', false);
 
     var id = randomId();
+    var previousHeadSrc = galleryHeadImageSrc('txt2img_gallery');
     localSet("txt2img_task_id", id);
 
     requestProgress(id, gradioApp().getElementById('txt2img_gallery_container'), gradioApp().getElementById('txt2img_gallery'), function() {
         showSubmitButtons('txt2img', true);
-        localRemove("txt2img_task_id");
         showRestoreProgressButton('txt2img', false);
+        recoverGalleryIfUnchanged('txt2img', id, 'txt2img_gallery', previousHeadSrc);
     });
 
     var res = create_submit_args(arguments);
@@ -182,12 +221,13 @@ function submit_img2img() {
     showSubmitButtons('img2img', false);
 
     var id = randomId();
+    var previousHeadSrc = galleryHeadImageSrc('img2img_gallery');
     localSet("img2img_task_id", id);
 
     requestProgress(id, gradioApp().getElementById('img2img_gallery_container'), gradioApp().getElementById('img2img_gallery'), function() {
         showSubmitButtons('img2img', true);
-        localRemove("img2img_task_id");
         showRestoreProgressButton('img2img', false);
+        recoverGalleryIfUnchanged('img2img', id, 'img2img_gallery', previousHeadSrc);
     });
 
     var res = create_submit_args(arguments);
