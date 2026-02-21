@@ -257,12 +257,20 @@
   color: var(--accent-primary); /* Red for disconnected */
 }
 
+.status-warning svg {
+  color: #ffcc00; /* Yellow/orange for warning */
+}
+
 .status-disconnected .status-value {
   color: var(--accent-primary);
 }
 
 .status-connected .status-value {
   color: #4ade80;
+}
+
+.status-warning .status-value {
+  color: #ffcc00;
 }
 
 /* Responsive */

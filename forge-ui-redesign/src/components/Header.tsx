@@ -104,14 +104,35 @@ export default function Header({
         <div className="header-status">
           {/* API Connection Status */}
           <div
-            className={`status-item ${apiStatus.isConnected ? "status-connected" : "status-disconnected"}`}
-            title={apiStatus.error || "API Connected"}
+            className={`status-item ${
+              apiStatus.isConnected && apiStatus.hasAPI
+                ? "status-connected"
+                : apiStatus.isConnected && !apiStatus.hasAPI
+                  ? "status-warning"
+                  : "status-disconnected"
+            }`}
+            title={
+              apiStatus.error ||
+              (apiStatus.isConnected && apiStatus.hasAPI
+                ? "API Connected"
+                : apiStatus.isConnected && !apiStatus.hasAPI
+                  ? "API Not Enabled - Click for setup instructions"
+                  : "Disconnected")
+            }
           >
-            {apiStatus.isConnected ? <Wifi size={16} /> : <WifiOff size={16} />}
+            {apiStatus.isConnected && apiStatus.hasAPI ? (
+              <Wifi size={16} />
+            ) : (
+              <WifiOff size={16} />
+            )}
             <div className="status-details">
               <span className="status-label">API</span>
               <span className="status-value">
-                {apiStatus.isConnected ? "Connected" : "Offline"}
+                {apiStatus.isConnected && apiStatus.hasAPI
+                  ? "Connected"
+                  : apiStatus.isConnected && !apiStatus.hasAPI
+                    ? "No API"
+                    : "Offline"}
               </span>
             </div>
           </div>
@@ -156,7 +177,8 @@ export default function Header({
         >
           <Folder size={20} />
         </button>
-Model Manager Button */}
+
+        {/* Model Manager Button */}
         <button
           className="header-settings"
           onClick={() => setShowModelManager(true)}
@@ -181,8 +203,7 @@ Model Manager Button */}
         onClose={() => setShowModelManager(false)}
         selectedModel={selectedModel}
         onModelSelect={onModelChange}
-      /utton>
-      </div>
+      />
 
       {/* Settings Modal */}
       <SettingsModal

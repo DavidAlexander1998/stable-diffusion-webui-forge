@@ -2,7 +2,7 @@
 
 ## Context
 
-This is a comprehensive plan to complete the Stable Diffusion Forge UI redesign project. The project already has a **solid foundation (~92% complete)** with working txt2img generation, LoRA support, Hires Fix, and real API integration. Phases 1, 2, 3, and 4 are complete - now we need to finish polish, optimization, and testing to deliver the full vision.
+This is a comprehensive plan to complete the Stable Diffusion Forge UI redesign project. The project has **~95% feature completion** with working txt2img generation, LoRA support, Hires Fix, and real API integration. **Phases 1-4 are COMPLETE, including Phase 4 cleanup** (February 15, 2026). Ready to begin Phase 5: Polish & Optimization.
 
 **Current State:**
 
@@ -1116,17 +1116,27 @@ These fixes don't require the API and improve UX immediately:
 - Enhanced History/Gallery (grid/list/detail views, search, favorites, full metadata)
 - GPU/Queue Status Real Data (polling hook, live GPU usage, queue counts)
 
-**🔄 Phase 4: Advanced Features (IN PROGRESS)**
+**✅ Phase 4: Advanced Features (COMPLETE)**
 
-- Real-time Preview
-- Model Manager
-- Keyboard Shortcuts
-- Drag-and-Drop Improvements
-- Notifications System
+- Real-time Preview ✓
+- Model Manager ✓
+- Keyboard Shortcuts ✓
+- Drag-and-Drop Improvements ✓
+- Notifications System ✓
 
-**⏸️ Phase 5: Polish & Optimization (PENDING)**
+**✅ Phase 4 Cleanup (COMPLETE - February 15, 2026)**
 
-- Error Handling UI
+- Fixed controls panel scrolling ✓
+- Made ImageUpload buttons always visible ✓
+- Added environment variable support (`.env` configuration) ✓
+- Enhanced error handling with typed errors (network, timeout, server) ✓
+- Improved connection status with 3-state indicator (connected/no-api/offline) ✓
+- Created comprehensive API setup guide (`FORGE_API_SETUP.md`) ✓
+- Updated README with prerequisites and troubleshooting ✓
+
+**⏳ Phase 5: Polish & Optimization (READY TO BEGIN)**
+
+- Error Handling UI (partially complete - typed errors done)
 - Performance Optimization
 - Loading States
 - Animations & Transitions
@@ -1200,4 +1210,41 @@ All Phase 3 features implemented:
 
 ---
 
-This plan captures the **full ambition** of the project and provides a clear roadmap to completion. Phases 1-3 are complete, with all core features, secondary workflows, and quality-of-life enhancements implemented. The remaining work focuses on advanced features, polish, and testing.
+**Phase 4 Cleanup (February 15, 2026):**
+
+All Phase 4 cleanup tasks completed successfully:
+
+**API & Configuration:**
+- Created `.env.example` with full documentation
+- Enhanced `api.ts` with environment variable support
+- Implemented `APIError` interface with typed errors (network, timeout, server, unknown)
+- Added timeout protection with AbortController
+- Added debug logging mode (`VITE_DEBUG`)
+- Created `checkConnection()` method for health checks
+
+**Connection Status:**
+- Rewrote `useApiStatus.ts` to use enhanced connection checking
+- Updated Header with 3-state status indicator:
+  - ✅ Green "Connected" = Forge running + API enabled
+  - ⚠️ Yellow "No API" = Forge running but missing `--api` flag
+  - 🔴 Red "Offline" = Cannot connect to Forge
+- Added warning state CSS styling
+- Enhanced error tooltips with actionable messages
+
+**Documentation:**
+- Created `FORGE_API_SETUP.md` - Comprehensive setup guide (Windows/Linux/Mac)
+- Created `QUICK_START.md` - 5-minute quick start guide
+- Created `PHASE_4_CLEANUP_SUMMARY.md` - Detailed cleanup summary
+- Updated `README.md` with prerequisites and troubleshooting
+
+**User Experience:**
+- Controls panel scrolling fixed (already done in previous work)
+- ImageUpload buttons always visible (already done in previous work)
+- Clear error messages with specific actions to take
+- Setup documentation reduces support burden
+
+**See [PHASE_4_CLEANUP_SUMMARY.md](./PHASE_4_CLEANUP_SUMMARY.md) for complete details.**
+
+---
+
+This plan captures the **full ambition** of the project and provides a clear roadmap to completion. Phases 1-4 are complete, with all core features, secondary workflows, quality-of-life enhancements, and advanced features implemented. Phase 4 cleanup ensures robust error handling and user guidance. The remaining work focuses on polish, optimization, and testing.
